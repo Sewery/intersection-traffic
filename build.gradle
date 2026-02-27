@@ -1,6 +1,8 @@
 plugins {
     id 'java'
     id 'application'
+    id 'org.sonarqube' version '7.2.2.6593'
+    id 'jacoco'
 }
 
 group = 'com.seweryn.tasior'
@@ -20,6 +22,21 @@ jar {
         }
     }
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+}
+
+jacocoTestReport {
+    dependsOn test
+    reports {
+        xml.required = true    // ← SonarCloud wymaga XML
+    }
+}
+
+sonar {
+    properties {
+        property 'sonar.projectKey', 'Sewery_intersection-traffic'
+        property 'sonar.organization','hf3l443428fj2dg1a'
+        property 'sonar.host.url', 'https://sonarcloud.io'
+    }
 }
 
 repositories {
