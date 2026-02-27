@@ -22,7 +22,7 @@ jobs:
           cache: gradle
 
       - name: Run tests
-        run: ./gradlew test
+        run: ./gradlew test jacocoTestReport
 
       - name: Upload test report
         if: always()      

@@ -27,7 +27,7 @@ jar {
 jacocoTestReport {
     dependsOn test
     reports {
-        xml.required = true    // ← SonarCloud wymaga XML
+        xml.required = true
     }
 }
 
@@ -36,6 +36,8 @@ sonar {
         property 'sonar.projectKey', 'Sewery_intersection-traffic'
         property 'sonar.organization','hf3l443428fj2dg1a'
         property 'sonar.host.url', 'https://sonarcloud.io'
+        property 'sonar.coverage.jacoco.xmlReportPaths',
+                'build/reports/jacoco/test/jacocoTestReport.xml'
     }
 }
 
