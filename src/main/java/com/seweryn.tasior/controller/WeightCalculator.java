@@ -6,9 +6,11 @@ import com.seweryn.tasior.model.Movement;
 import com.seweryn.tasior.model.Vehicle;
 
 import java.util.Set;
+import java.util.stream.Collectors;
 
 public class WeightCalculator {
 
+    public static final int MAX_WAIT_TIME = 10;
     private double busPriority;
     private double carPriority;
 
@@ -29,21 +31,46 @@ public class WeightCalculator {
 
     public double calculatePhaseWeight(Set<Movement> phase, Intersection intersection, int currentStep) {
         return phase.stream()
-                .mapToDouble(m -> calculateLaneWeight(
-                        intersection.getRoad(m.from()).getLaneByTurn(m.turn()),
-                        currentStep
-                ))
+                .mapToDouble(m -> intersection.getRoad(m.from())
+                        .getLaneByTurn(m.turn())
+                        .map(lane -> calculateLaneWeight(lane, currentStep))
+                        .orElse(0.0)
+                )
                 .sum();
     }
 
     private double calculateLaneWeight(Lane lane, int currentStep) {
+        if (lane.isEmpty()) return 0.0;
+
         return lane.getWaitingVehicles().stream()
-                .mapToDouble(v -> Math.pow(currentStep - v.arrivalTime(), 1.5)
-                        * getPriority(v))
+                .mapToDouble(v -> {
+                    double waitBonus = v.waitTime(currentStep) >= MAX_WAIT_TIME
+                            ? 1_000_000.0
+                            : 1.0 + Math.pow(v.waitTime(currentStep), 1.5);
+                    return waitBonus * getPriority(v);
+                })
                 .sum();
     }
 
     private double getPriority(Vehicle v) {
         return v.vehicleId().startsWith("bus") ? busPriority : carPriority;
+    }
+
+    public boolean hasStarvingVehicle(Intersection intersection, int currentStep) {
+        return intersection.getRoads().stream()
+                .flatMap(road -> road.getLanes().stream())
+                .flatMap(lane -> lane.getWaitingVehicles().stream())
+                .anyMatch(v -> v.waitTime(currentStep) >= MAX_WAIT_TIME);
+    }
+
+    public Set<Movement> getStarvingMovements(Intersection intersection, int currentStep) {
+        return intersection.getRoads().stream()
+                .flatMap(road -> road.getLanes().stream())
+                .filter(lane -> lane.getWaitingVehicles().stream()
+                        .anyMatch(v -> v.waitTime(currentStep) >= MAX_WAIT_TIME))
+                .map(lane -> new Movement(
+                        intersection.getRoadByLane(lane).getLocation(),
+                        lane.getAllowedTurn()))
+                .collect(Collectors.toSet());
     }
 }

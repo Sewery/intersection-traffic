@@ -14,7 +14,7 @@ import java.util.List;
 
 public class InputParser {
 
-        private static final ObjectMapper mapper = new ObjectMapper();
+    private static final ObjectMapper mapper = new ObjectMapper();
 
     public static List<Command> parse(String inputFilePath) {
         try {
@@ -30,7 +30,7 @@ public class InputParser {
                         Direction.fromString(node.get("endRoad").asText()),
                         node.get("vehicleId").asText()
                     );
-                    case "step"               -> Command.STEP;
+                    case "step"-> Command.STEP;
                     case "configureAlgorithm" -> new ConfigureAlgorithmCommand(
                         node.get("carPriority").asDouble(1.0),
                         node.get("busPriority").asDouble(5.0)

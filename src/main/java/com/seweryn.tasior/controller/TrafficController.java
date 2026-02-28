@@ -24,12 +24,29 @@ public class TrafficController{
     public void executeStep(int stepCounter) {
         if (isInTransition()) {
             tickTransition();
-        } else {
-            Set<Movement> bestPhase = findBestPhase(stepCounter);
-            if (currentPhase == null || shouldSwitch(bestPhase, stepCounter)) {
-                initiateTransition(bestPhase);
-            }
+            return;
         }
+
+        Set<Movement> targetPhase = weightCalculator.hasStarvingVehicle(intersection, stepCounter)
+                ? findStarvingPhase(stepCounter)
+                : findBestPhase(stepCounter);
+
+        if (currentPhase == null || shouldSwitch(targetPhase, stepCounter)) {
+            initiateTransition(targetPhase);
+        }
+    }
+
+    private Set<Movement> findStarvingPhase(int stepCounter) {
+        Set<Movement> starvingMovements =
+                weightCalculator.getStarvingMovements(intersection, stepCounter);
+
+        // znajdź fazę która obsługuje zagłodzone pojazdy
+        return TrafficCompatibility.getPhaseGroups().stream()
+                .filter(phase -> phase.stream().anyMatch(starvingMovements::contains))
+                .max(Comparator.comparingDouble(
+                        phase -> weightCalculator.calculatePhaseWeight(phase, intersection, stepCounter)
+                ))
+                .orElseGet(() -> findBestPhase(stepCounter));  // fallback
     }
 
     private Set<Movement> findBestPhase(int stepCounter) {
@@ -47,15 +64,7 @@ public class TrafficController{
         double currentWeight = weightCalculator.calculatePhaseWeight(currentPhase, intersection, stepCounter);
         double bestWeight = weightCalculator.calculatePhaseWeight(bestPhase, intersection, stepCounter);
 
-        int vehiclesOnRed = intersection.getRoads().stream()
-                .flatMap(road -> road.getLanes().stream()
-                        .filter(lane -> !currentPhase.contains(
-                                new Movement(road.getLocation(), lane.getAllowedTurn())))
-                )
-                .mapToInt(Lane::getVehicleCount)
-                .sum();
-
-        double switchingPenalty = vehiclesOnRed * TrafficLight.YELLOW_TIME;
+        double switchingPenalty = currentWeight * TrafficLight.YELLOW_TIME;
         return ((bestWeight - currentWeight) * LOOK_AHEAD_WINDOW) > switchingPenalty;
     }
 
@@ -99,5 +108,11 @@ public class TrafficController{
                 .anyMatch(lane -> lane.getTrafficLight().isInTransition());
     }
 
-    public Set<Movement> getCurrentPhase() { return currentPhase; }
+    public void configure(double carPriority,double busPriority){
+        weightCalculator.configure(carPriority,busPriority);
+    }
+
+    public Set<Movement> getCurrentPhase(){
+        return currentPhase;
+    }
 }

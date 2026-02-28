@@ -1,7 +1,6 @@
 package com.seweryn.tasior.model;
 
 public class TrafficLight {
-
     public enum State {
         GREEN,
         YELLOW_TO_RED,

@@ -4,24 +4,41 @@ import java.util.*;
 
 public class Lane {
     private final Turn allowedTurn;
-    private boolean isOpen;
     private final Queue<Vehicle> waitingVehicles = new LinkedList<>();
     private final TrafficLight trafficLight = new TrafficLight(TrafficLight.State.RED);
+    private Vehicle crossingVehicle = null;
 
     public Lane(Turn allowedTurn) {
-        this.allowedTurn = allowedTurn; // Poprawione
-        this.isOpen = false;
+        this.allowedTurn = allowedTurn;
     }
 
     public void addVehicle(Vehicle vehicle) {
-        waitingVehicles.add(vehicle);  // arrivalTime jest w Vehicle, nie trzeba osobnej listy
+        waitingVehicles.add(vehicle);
     }
 
-    public Vehicle pollVehicle() {
-        return waitingVehicles.poll();
+    public Optional<Vehicle> pollVehicle() {
+        return Optional.ofNullable(waitingVehicles.poll());
     }
 
-    // zamiast getSumOfVehiclesTimesOfWaiting - oblicz na bieżąco z Vehicle
+    public void startCrossing() {
+        crossingVehicle = waitingVehicles.poll();
+        if (crossingVehicle != null) {
+            crossingVehicle.setState(VehicleState.CROSSING);
+        }
+    }
+
+    public Optional<Vehicle> finishCrossing() {
+        if (crossingVehicle == null) return Optional.empty();
+        crossingVehicle.setState(VehicleState.EXITED);
+        Vehicle exited = crossingVehicle;
+        crossingVehicle = null;
+        return Optional.of(exited);
+    }
+
+    public boolean isCrossing() {
+        return crossingVehicle != null;
+    }
+
     public double getAverageWaitTime(int currentStep) {
         return waitingVehicles.stream()
                 .mapToInt(v -> currentStep - v.arrivalTime())
@@ -39,21 +56,25 @@ public class Lane {
         int rank = (int) Math.ceil(percentile / 100.0 * waitTimes.size()) - 1;
         return waitTimes.get(rank);
     }
-    
+
     public TrafficLight getTrafficLight(){
         return trafficLight;
     }
 
-    public Turn getAllowedTurn() {
+    public Turn getAllowedTurn(){
         return allowedTurn;
     }
 
-    public boolean isEmpty() {
+    public boolean isEmpty(){
         return waitingVehicles.isEmpty();
     }
 
     public int getVehicleCount(){
         return waitingVehicles.size();
+    }
+
+    public boolean isPassable(){
+        return trafficLight.isGreen();
     }
 
     public Collection<Vehicle> getWaitingVehicles(){

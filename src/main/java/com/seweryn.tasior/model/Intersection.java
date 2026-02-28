@@ -22,4 +22,11 @@ public class Intersection {
                 .findFirst()
                 .orElseThrow();
     }
+
+    public Road getRoadByLane(Lane lane){
+        return roads.stream()
+                .filter(road -> road.getLanes().contains(lane))
+                .findFirst()
+                .orElseThrow(() -> new IllegalArgumentException("Lane not found in any road"));
+    }
 }

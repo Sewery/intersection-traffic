@@ -51,18 +51,30 @@ public class SimulationEngine {
     }
 
     private void handleConfigure(ConfigureAlgorithmCommand command) {
+        controller.configure(command.carPriority(), command.busPriority());
+
     }
 
     private void handleStep() {
         List<String> leftThisStep = new ArrayList<>();
 
-        controller.executeStep(stepCounter);
-
-        // najpierw zbierz pojazdy, które mogą wyjechać (światło GREEN)
+        // faza 1 – pojazdy które były na skrzyżowaniu (CROSSING) opuszczają je
         for (Road road : intersection.getRoads()) {
             for (Lane lane : road.getLanes()) {
-                if (lane.getTrafficLight().isGreen() && !lane.isEmpty()) {
-                    leftThisStep.add(lane.pollVehicle().vehicleId());
+                lane.finishCrossing()
+                        .map(Vehicle::vehicleId)
+                        .ifPresent(leftThisStep::add);
+            }
+        }
+
+        // zmień fazę świateł
+        controller.executeStep(stepCounter);
+
+        // faza 2 – pojazdy z zielonych pasów wjeżdżają na skrzyżowanie
+        for (Road road : intersection.getRoads()) {
+            for (Lane lane : road.getLanes()) {
+                if (lane.isPassable() && !lane.isEmpty() && !lane.isCrossing()) {
+                    lane.startCrossing();
                 }
             }
         }
@@ -75,7 +87,7 @@ public class SimulationEngine {
         Road road = intersection.getRoad(command.startRoad());
         road.addVehicleToLane(
                 command.endRoad(),
-                new Vehicle(stepCounter,command.vehicleId())
+                new Vehicle(command.vehicleId(),stepCounter)
         );
     }
 

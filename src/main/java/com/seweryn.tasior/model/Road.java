@@ -24,14 +24,12 @@ public class Road {
 
     public void addVehicleToLane(Direction endRoad, Vehicle vehicle) {
         Turn vehicleTurn = Direction.findTurn(location, endRoad);
-        Lane vehicleLane = lanesPerTurn.get(vehicleTurn);
-        if (vehicleLane != null) {
-            vehicleLane.addVehicle(vehicle);
-        }
+        getLaneByTurn(vehicleTurn)
+                .ifPresent(lane -> lane.addVehicle(vehicle));
     }
 
-    public Lane getLaneByTurn(Turn turn) {
-        return lanesPerTurn.get(turn);
+    public Optional<Lane> getLaneByTurn(Turn turn) {
+        return Optional.ofNullable(lanesPerTurn.get(turn));
     }
 
     public Collection<Lane> getLanes() {
