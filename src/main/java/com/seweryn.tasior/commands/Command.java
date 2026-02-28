@@ -7,8 +7,10 @@ public interface Command {
         ADD_VEHICLE,
         STEP,
         CONFIGURE_ALGORITHM,
-        UPDATE_LANE_STATUS
+        UPDATE_LANE_STATUS,
+        GET_STATISTICS
     }
 
     Command STEP = () -> CommandType.STEP;
+    Command GET_STATISTICS = () -> CommandType.GET_STATISTICS;
 }

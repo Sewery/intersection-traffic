@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.seweryn.tasior.commands.*;
 import com.seweryn.tasior.controller.TimeSlot;
 import com.seweryn.tasior.model.Direction;
+import com.seweryn.tasior.model.Turn;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -32,7 +33,12 @@ public class InputParser {
                     );
                     case "step"-> Command.STEP;
                     case "configureAlgorithm" -> parseConfigureAlgorithm(node);
-                    case "updateLaneStatus"   -> new UpdateLaneStatusCommand();
+                    case "updateLaneStatus"   -> new UpdateLaneStatusCommand(
+                            Direction.fromString(node.get("road").asText()),
+                            Turn.valueOf(node.get("turn").asText().toUpperCase()),
+                            node.get("blocked").asBoolean()
+                    );
+                    case "getStatistics"    -> Command.GET_STATISTICS;
                     default -> throw new IllegalArgumentException("Unknown command: " + type);
                 };
                 result.add(command);

@@ -18,6 +18,8 @@ import com.seweryn.tasior.model.Intersection;
 import com.seweryn.tasior.model.Lane;
 import com.seweryn.tasior.model.Road;
 import com.seweryn.tasior.model.Vehicle;
+import com.seweryn.tasior.statistics.SimulationEvent;
+import com.seweryn.tasior.statistics.StatisticsCollector;
 
 import java.util.List;
 import java.util.ArrayList;
@@ -27,6 +29,7 @@ public class SimulationEngine {
     private final Intersection intersection;
     private TrafficController controller;
     private final SimulationResult result;
+    private final StatisticsCollector statisticsCollector = new StatisticsCollector();
     private int stepCounter;
 
     public SimulationEngine(String inputFile) {
@@ -41,16 +44,38 @@ public class SimulationEngine {
     public SimulationResult runSimulation() {
         for (Command command : commands) {
             switch (command.getType()) {
-                case ADD_VEHICLE        -> handleAddVehicle((AddVehicleCommand) command);
-                case STEP               -> handleStep();
+                case ADD_VEHICLE -> handleAddVehicle((AddVehicleCommand) command);
+                case STEP -> handleStep();
                 case CONFIGURE_ALGORITHM -> handleConfigure((ConfigureAlgorithmCommand) command);
-                case UPDATE_LANE_STATUS  -> handleUpdateLane((UpdateLaneStatusCommand) command);
+                case UPDATE_LANE_STATUS -> handleUpdateLane((UpdateLaneStatusCommand) command);
+                case GET_STATISTICS -> handleGetStatistics();
             }
         }
         return result;
     }
 
+    private void handleGetStatistics() {
+        result.setStatistics(statisticsCollector.compute());
+    }
+
     private void handleUpdateLane(UpdateLaneStatusCommand command) {
+        Road road = intersection.getRoad(command.road());
+        road.getLaneByTurn(command.turn()).ifPresent(lane -> {
+            if (command.blocked()) {
+                lane.getWaitingVehicles().forEach(v ->
+                        statisticsCollector.onEvent(
+                                new SimulationEvent.VehicleStuck(v.vehicleId(), command.road())));
+                if (!lane.getWaitingVehicles().isEmpty()) {
+                    statisticsCollector.onEvent(new SimulationEvent.LaneBlocked(
+                            command.road(), command.turn(),
+                            lane.getWaitingVehicles().size(), stepCounter));  // ← step
+                }
+            } else {
+                statisticsCollector.onEvent(new SimulationEvent.LaneUnblocked(
+                        command.road(), command.turn(), stepCounter));  // ← odblokowanie
+            }
+            lane.setBlocked(command.blocked());
+        });
     }
 
     private void handleConfigure(ConfigureAlgorithmCommand command) {
@@ -70,7 +95,11 @@ public class SimulationEngine {
             for (Lane lane : road.getLanes()) {
                 lane.finishCrossing()
                         .map(Vehicle::vehicleId)
-                        .ifPresent(leftThisStep::add);
+                        .ifPresent(id -> {
+                            leftThisStep.add(id);
+                            statisticsCollector.onEvent(
+                                    new SimulationEvent.VehicleExited(id, stepCounter));
+                        });
             }
         }
 
@@ -96,6 +125,8 @@ public class SimulationEngine {
                 command.endRoad(),
                 new Vehicle(command.vehicleId(),stepCounter)
         );
+        statisticsCollector.onEvent(new SimulationEvent.VehicleArrived(
+                command.vehicleId(), command.startRoad(), stepCounter));
     }
 
 }

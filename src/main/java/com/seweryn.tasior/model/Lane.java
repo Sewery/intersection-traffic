@@ -7,6 +7,7 @@ public class Lane {
     private final Queue<Vehicle> waitingVehicles = new LinkedList<>();
     private final TrafficLight trafficLight = new TrafficLight(TrafficLight.State.RED);
     private Vehicle crossingVehicle = null;
+    private boolean blocked = false;
 
     public Lane(Turn allowedTurn) {
         this.allowedTurn = allowedTurn;
@@ -69,8 +70,16 @@ public class Lane {
         return waitingVehicles.size();
     }
 
+    public void setBlocked(boolean blocked) {
+        this.blocked = blocked;
+    }
+
+    public boolean isBlocked() {
+        return blocked;
+    }
+
     public boolean isPassable(){
-        return trafficLight.isGreen();
+        return trafficLight.isGreen() && !blocked;
     }
 
     public Collection<Vehicle> getWaitingVehicles(){

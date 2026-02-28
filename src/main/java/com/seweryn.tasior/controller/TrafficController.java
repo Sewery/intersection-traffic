@@ -107,10 +107,6 @@ public class TrafficController{
                 .anyMatch(lane -> lane.getTrafficLight().isInTransition());
     }
 
-    public void configure(double carPriority,double busPriority){
-        weightCalculator.configure(carPriority,busPriority);
-    }
-
     public Set<Movement> getCurrentPhase(){
         return currentPhase;
     }
