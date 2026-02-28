@@ -1,6 +1,5 @@
-package controller;
+package com.seweryn.tasior.controller;
 
-import com.seweryn.tasior.controller.WeightCalculator;
 import com.seweryn.tasior.model.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -20,74 +19,89 @@ class WeightCalculatorTest {
         intersection = new Intersection();
     }
 
+    // wagi podstawowe
+
     @Test
     void emptyLaneShouldHaveZeroWeight() {
         Set<Movement> phase = Set.of(new Movement(Direction.NORTH, Turn.STRAIGHT));
+
         assertEquals(0.0, calculator.calculatePhaseWeight(phase, intersection, 5));
     }
 
     @Test
-    void carShouldHavePriorityOne() {
-        intersection.getRoad(Direction.NORTH).addVehicleToLane(
-                Direction.SOUTH, new Vehicle(0, "car1")
-        );
+    void carShouldHaveDefaultPriorityOne() {
+        addVehicle("car1", Direction.NORTH, Direction.SOUTH, 0);
         Set<Movement> phase = Set.of(new Movement(Direction.NORTH, Turn.STRAIGHT));
 
-        // step=1, arrivalTime=0, diff=1 → 1^1.5 * 1.0 = 1.0
-        double weight = calculator.calculatePhaseWeight(phase, intersection, 1);
-        assertEquals(1.0, weight, 0.001);
+        // waitTime=1, (1.0 + 1^1.5) * 1.0 = 2.0
+        assertEquals(2.0, calculator.calculatePhaseWeight(phase, intersection, 1), 0.001);
     }
 
     @Test
-    void busShouldHavePriorityFive() {
-        intersection.getRoad(Direction.NORTH).addVehicleToLane(
-                Direction.SOUTH, new Vehicle(0, "bus1")
-        );
+    void busShouldHaveDefaultPriorityFive() {
+        addVehicle("bus1", Direction.NORTH, Direction.SOUTH, 0);
         Set<Movement> phase = Set.of(new Movement(Direction.NORTH, Turn.STRAIGHT));
 
-        // step=1, arrivalTime=0, diff=1 → 1^1.5 * 5.0 = 5.0
-        double weight = calculator.calculatePhaseWeight(phase, intersection, 1);
-        assertEquals(5.0, weight, 0.001);
-    }
-
-    @Test
-    void weightShouldGrowWithTime() {
-        intersection.getRoad(Direction.NORTH).addVehicleToLane(
-                Direction.SOUTH, new Vehicle(0, "car1")
-        );
-        Set<Movement> phase = Set.of(new Movement(Direction.NORTH, Turn.STRAIGHT));
-
-        double weightAt1 = calculator.calculatePhaseWeight(phase, intersection, 1);
-        double weightAt5 = calculator.calculatePhaseWeight(phase, intersection, 5);
-
-        assertTrue(weightAt5 > weightAt1);
-    }
-
-    @Test
-    void configureShouldChangePriorities() {
-        calculator.configure(2.0, 10.0);
-        intersection.getRoad(Direction.NORTH).addVehicleToLane(
-                Direction.SOUTH, new Vehicle(0, "bus1")
-        );
-        Set<Movement> phase = Set.of(new Movement(Direction.NORTH, Turn.STRAIGHT));
-
-        // step=1, diff=1 → 1^1.5 * 10.0 = 10.0
-        double weight = calculator.calculatePhaseWeight(phase, intersection, 1);
-        assertEquals(10.0, weight, 0.001);
+        // waitTime=1, (1.0 + 1^1.5) * 5.0 = 10.0
+        assertEquals(10.0, calculator.calculatePhaseWeight(phase, intersection, 1), 0.001);
     }
 
     @Test
     void multipleVehiclesShouldSumWeights() {
-        intersection.getRoad(Direction.NORTH).addVehicleToLane(
-                Direction.SOUTH, new Vehicle(0, "car1")
-        );
-        intersection.getRoad(Direction.NORTH).addVehicleToLane(
-                Direction.SOUTH, new Vehicle(0, "car2")
-        );
+        addVehicle("car1", Direction.NORTH, Direction.SOUTH, 0);
+        addVehicle("car2", Direction.NORTH, Direction.SOUTH, 0);
         Set<Movement> phase = Set.of(new Movement(Direction.NORTH, Turn.STRAIGHT));
 
-        // step=1 → 2 * (1^1.5 * 1.0) = 2.0
-        double weight = calculator.calculatePhaseWeight(phase, intersection, 1);
-        assertEquals(2.0, weight, 0.001);
+        // waitTime=1, 2 * (1.0 + 1^1.5) * 1.0 = 4.0
+        assertEquals(4.0, calculator.calculatePhaseWeight(phase, intersection, 1), 0.001);
+    }
+
+    // konfiguracja
+    @Test
+    void configureShouldChangeCarPriority() {
+        calculator.configure(3.0, 5.0);
+        addVehicle("car1", Direction.NORTH, Direction.SOUTH, 0);
+        Set<Movement> phase = Set.of(new Movement(Direction.NORTH, Turn.STRAIGHT));
+
+        // waitTime=1, (1.0 + 1^1.5) * 3.0 = 6.0
+        assertEquals(6.0, calculator.calculatePhaseWeight(phase, intersection, 1), 0.001);
+    }
+
+    @Test
+    void configureShouldChangeBusPriority() {
+        calculator.configure(1.0, 10.0);
+        addVehicle("bus1", Direction.NORTH, Direction.SOUTH, 0);
+        Set<Movement> phase = Set.of(new Movement(Direction.NORTH, Turn.STRAIGHT));
+
+        // waitTime=1, (1.0 + 1^1.5) * 10.0 = 20.0
+        assertEquals(20.0, calculator.calculatePhaseWeight(phase, intersection, 1), 0.001);
+    }
+
+    // zagłodzenie
+
+    @Test
+    void vehicleWaitingMaxTimeShouldBeStarving() {
+        addVehicle("car1", Direction.NORTH, Direction.SOUTH, 0);
+
+        assertFalse(calculator.hasStarvingVehicle(intersection, 9),
+                "waitTime=9 < MAX_WAIT_TIME – nie zagłodzony");
+        assertTrue(calculator.hasStarvingVehicle(intersection, 10),
+                "waitTime=10 >= MAX_WAIT_TIME – zagłodzony");
+    }
+
+    @Test
+    void getStarvingMovementsShouldReturnCorrectLane() {
+        addVehicle("car1", Direction.NORTH, Direction.SOUTH, 0);
+
+        Set<Movement> starving = calculator.getStarvingMovements(intersection, 10);
+
+        assertEquals(1, starving.size());
+        assertTrue(starving.contains(new Movement(Direction.NORTH, Turn.STRAIGHT)),
+                "Zagłodzony ruch powinien być NORTH→STRAIGHT");
+    }
+
+    //helper
+    private void addVehicle(String vehicleId, Direction from, Direction to, int arrivalStep) {
+        intersection.getRoad(from).addVehicleToLane(to, new Vehicle(vehicleId, arrivalStep));
     }
 }

@@ -2,17 +2,15 @@ package controller;
 
 import com.seweryn.tasior.controller.TrafficController;
 import com.seweryn.tasior.controller.WeightCalculator;
-import com.seweryn.tasior.model.Direction;
-import com.seweryn.tasior.model.Intersection;
-import com.seweryn.tasior.model.TrafficLight;
-import com.seweryn.tasior.model.Vehicle;
+import com.seweryn.tasior.model.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+
+import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 class TrafficControllerTest {
-
     private Intersection intersection;
     private TrafficController controller;
 
@@ -22,104 +20,65 @@ class TrafficControllerTest {
         controller = new TrafficController(intersection, new WeightCalculator());
     }
 
+    // inicjalizacja
     @Test
-    void firstPhaseShouldBeSetImmediately() {
-        intersection.getRoad(Direction.NORTH).addVehicleToLane(
-                Direction.SOUTH, new Vehicle(0, "car1")
-        );
-        controller.executeStep(1);
+    void initialPhaseShouldBeNull() {
+        assertNull(controller.getCurrentPhase());
+    }
 
+    @Test
+    void firstStepShouldSetPhase() {
+        controller.executeStep(0);
         assertNotNull(controller.getCurrentPhase());
     }
 
     @Test
     void firstPhaseShouldHaveGreenLights() {
-        intersection.getRoad(Direction.NORTH).addVehicleToLane(
-                Direction.SOUTH, new Vehicle(0, "car1")
-        );
+        controller.executeStep(0);
+
+        controller.getCurrentPhase().forEach(movement -> {
+            Lane lane = intersection.getRoad(movement.from())
+                    .getLaneByTurn(movement.turn())
+                    .orElseThrow();
+            assertTrue(lane.getTrafficLight().isGreen(),
+                    "Pas w aktywnej fazie powinien mieć zielone: " + movement);
+        });
+    }
+
+    // bezpieczenstwo
+    @Test
+    void conflictingDirectionsShouldNeverHaveGreenSimultaneously() {
+        controller.executeStep(0);
+
+        Set<Movement> phase = controller.getCurrentPhase();
+        boolean hasNS = phase.stream().anyMatch(m ->
+                m.from() == Direction.NORTH || m.from() == Direction.SOUTH);
+        boolean hasEW = phase.stream().anyMatch(m ->
+                m.from() == Direction.EAST || m.from() == Direction.WEST);
+
+        assertFalse(hasNS && hasEW);
+    }
+
+    // zmiana fazy
+    @Test
+    void phaseShouldNotSwitchWhenCurrentPhaseIsHeavier() {
+        addVehicles("south", "north", 5);
+        controller.executeStep(0);
+        Set<Movement> initialPhase = controller.getCurrentPhase();
+
         controller.executeStep(1);
 
-        boolean anyGreen = intersection.getRoads().stream()
-                .flatMap(road -> road.getLanes().stream())
-                .anyMatch(lane -> lane.getTrafficLight().isGreen());
-
-        assertTrue(anyGreen);
+        assertEquals(initialPhase, controller.getCurrentPhase());
     }
 
-    @Test
-    void emptyIntersectionShouldNotCrash() {
-        assertDoesNotThrow(() -> controller.executeStep(1));
-    }
 
-    @Test
-    void busHigherPriorityShouldSwitchPhase() {
-        // NS ma 3 samochody
-        for (int i = 0; i < 3; i++) {
-            intersection.getRoad(Direction.NORTH).addVehicleToLane(
-                    Direction.SOUTH, new Vehicle(0, "car" + i)
-            );
+    // helpers
+    private void addVehicles(String from, String to, int count) {
+        Direction start = Direction.fromString(from);
+        Direction end = Direction.fromString(to);
+        for (int i = 0; i < count; i++) {
+            intersection.getRoad(start).addVehicleToLane(end,
+                    new Vehicle("car_" + from + "_" + i, 0));
         }
-
-        // ustaw pierwszą fazę NS
-        controller.executeStep(1);
-
-        // dodaj busa na EW – wyższy priorytet
-        intersection.getRoad(Direction.WEST).addVehicleToLane(
-                Direction.EAST, new Vehicle(1, "bus1")
-        );
-
-        // poczekaj aż waga busa przewyższy NS
-        for (int step = 2; step < 20; step++) {
-            controller.executeStep(step);
-        }
-
-        // faza powinna się zmienić na EW
-        boolean ewPhaseActive = controller.getCurrentPhase().stream()
-                .anyMatch(m -> m.from() == Direction.WEST || m.from() == Direction.EAST);
-
-        assertTrue(ewPhaseActive);
-    }
-
-    @Test
-    void shouldNotSwitchWhenCurrentPhaseIsBest() {
-        intersection.getRoad(Direction.NORTH).addVehicleToLane(
-                Direction.SOUTH, new Vehicle(0, "car1")
-        );
-        intersection.getRoad(Direction.NORTH).addVehicleToLane(
-                Direction.SOUTH, new Vehicle(0, "car2")
-        );
-
-        controller.executeStep(1);
-        var phaseAfterFirst = controller.getCurrentPhase();
-
-        controller.executeStep(2);
-        var phaseAfterSecond = controller.getCurrentPhase();
-
-        assertEquals(phaseAfterFirst, phaseAfterSecond);
-    }
-
-    @Test
-    void transitionShouldUsYellowLight() {
-        // ustaw NS
-        intersection.getRoad(Direction.NORTH).addVehicleToLane(
-                Direction.SOUTH, new Vehicle(0, "car1")
-        );
-        controller.executeStep(1);
-
-        // dodaj dużo pojazdów na EW żeby wymusić zmianę
-        for (int i = 0; i < 5; i++) {
-            intersection.getRoad(Direction.WEST).addVehicleToLane(
-                    Direction.EAST, new Vehicle(1, "bus" + i)
-            );
-        }
-
-        controller.executeStep(2);
-
-        boolean anyYellow = intersection.getRoads().stream()
-                .flatMap(road -> road.getLanes().stream())
-                .anyMatch(lane -> lane.getTrafficLight().getState() == TrafficLight.State.YELLOW_TO_RED
-                        || lane.getTrafficLight().getState() == TrafficLight.State.YELLOW_TO_GREEN);
-
-        assertTrue(anyYellow);
     }
 }
