@@ -1,0 +1,56 @@
+{
+  "commands": [
+    {
+      "type": "configureAlgorithm",
+      "mode": "HISTORICAL",
+      "carPriority": 1.0,
+      "busPriority": 5.0,
+      "historicalData": {
+        "NORTH": [
+          { "fromStep": 0, "toStep": 4,  "factor": 0.1 },
+          { "fromStep": 5, "toStep": 20, "factor": 0.1 }
+        ],
+        "SOUTH": [
+          { "fromStep": 0, "toStep": 4,  "factor": 0.1 },
+          { "fromStep": 5, "toStep": 20, "factor": 0.1 }
+        ],
+        "EAST": [
+          { "fromStep": 0, "toStep": 4,  "factor": 5.0 },
+          { "fromStep": 5, "toStep": 20, "factor": 5.0 }
+        ],
+        "WEST": [
+          { "fromStep": 0, "toStep": 4,  "factor": 5.0 },
+          { "fromStep": 5, "toStep": 20, "factor": 5.0 }
+        ]
+      }
+    },
+    { "type": "step" },
+    { "type": "step" },
+    { "type": "addVehicle", "vehicleId": "e_car1", "startRoad": "east",  "endRoad": "west"  },
+    { "type": "addVehicle", "vehicleId": "e_car2", "startRoad": "east",  "endRoad": "west"  },
+    { "type": "addVehicle", "vehicleId": "e_car3", "startRoad": "east",  "endRoad": "west"  },
+    { "type": "addVehicle", "vehicleId": "n_car1", "startRoad": "north", "endRoad": "south" },
+    { "type": "addVehicle", "vehicleId": "n_car2", "startRoad": "north", "endRoad": "south" },
+    { "type": "addVehicle", "vehicleId": "n_car3", "startRoad": "north", "endRoad": "south" },
+    { "type": "step" },
+    { "type": "step" },
+    { "type": "step" },
+    { "type": "step" },
+    { "type": "step" },
+    { "type": "step" },
+    { "type": "step" },
+    { "type": "step" },
+    { "type": "step" },
+    { "type": "step" },
+    { "type": "step" },
+    { "type": "step" },
+    { "type": "step" },
+    { "type": "step" },
+    { "type": "step" },
+    { "type": "step" },
+    { "type": "step" },
+    { "type": "step" },
+    { "type": "step" },
+    { "type": "step" }
+  ]
+}

@@ -8,14 +8,14 @@ import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-class WeightCalculatorTest {
+class ReactiveWeightCalculatorTest {
 
-    private WeightCalculator calculator;
+    private ReactiveWeightCalculator calculator;
     private Intersection intersection;
 
     @BeforeEach
     void setUp() {
-        calculator = new WeightCalculator();
+        calculator = new ReactiveWeightCalculator();
         intersection = new Intersection();
     }
 

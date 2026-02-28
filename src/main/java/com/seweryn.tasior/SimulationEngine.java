@@ -5,9 +5,11 @@ import com.seweryn.tasior.commands.Command;
 import com.seweryn.tasior.commands.ConfigureAlgorithmCommand;
 import com.seweryn.tasior.commands.UpdateLaneStatusCommand;
 
+import com.seweryn.tasior.controller.HistoricalWeightCalculator;
 import com.seweryn.tasior.controller.TrafficController;
-import com.seweryn.tasior.controller.WeightCalculator;
+import com.seweryn.tasior.controller.ReactiveWeightCalculator;
 
+import com.seweryn.tasior.controller.WeightCalculator;
 import com.seweryn.tasior.io.SimulationResult;
 import com.seweryn.tasior.io.StepStatus;
 import com.seweryn.tasior.io.InputParser;
@@ -23,17 +25,18 @@ import java.util.ArrayList;
 public class SimulationEngine {
     private final List<Command> commands;
     private final Intersection intersection;
-    private final TrafficController controller;
+    private TrafficController controller;
     private final SimulationResult result;
     private int stepCounter;
 
     public SimulationEngine(String inputFile) {
         this.commands = InputParser.parse(inputFile);
         this.intersection = new Intersection();
-        this.controller = new TrafficController(intersection, new WeightCalculator());
+        this.controller = new TrafficController(intersection, new ReactiveWeightCalculator());
         this.result = new SimulationResult();
         this.stepCounter = 0;
     }
+
 
     public SimulationResult runSimulation() {
         for (Command command : commands) {
@@ -51,8 +54,12 @@ public class SimulationEngine {
     }
 
     private void handleConfigure(ConfigureAlgorithmCommand command) {
-        controller.configure(command.carPriority(), command.busPriority());
-
+        WeightCalculator calculator = switch (command.mode()) {
+            case HISTORICAL -> new HistoricalWeightCalculator(command.historicalData());
+            case REACTIVE   -> new ReactiveWeightCalculator();
+        };
+        calculator.configure(command.carPriority(), command.busPriority());
+        controller = new TrafficController(intersection, calculator);
     }
 
     private void handleStep() {

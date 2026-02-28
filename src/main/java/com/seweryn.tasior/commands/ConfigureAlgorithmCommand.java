@@ -1,6 +1,17 @@
 package com.seweryn.tasior.commands;
 
-public record ConfigureAlgorithmCommand(double carPriority, double busPriority) implements Command {
+import com.seweryn.tasior.controller.TimeSlot;
+import com.seweryn.tasior.model.Direction;
+
+import java.util.List;
+import java.util.Map;
+
+public record ConfigureAlgorithmCommand(
+        double carPriority,
+        double busPriority,
+        AlgorithmMode mode,
+        Map<Direction, List<TimeSlot>> historicalData
+) implements Command {
     @Override
     public CommandType getType() {
         return CommandType.CONFIGURE_ALGORITHM;

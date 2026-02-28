@@ -1,7 +1,7 @@
 package controller;
 
 import com.seweryn.tasior.controller.TrafficController;
-import com.seweryn.tasior.controller.WeightCalculator;
+import com.seweryn.tasior.controller.ReactiveWeightCalculator;
 import com.seweryn.tasior.model.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -17,7 +17,7 @@ class TrafficControllerTest {
     @BeforeEach
     void setUp() {
         intersection = new Intersection();
-        controller = new TrafficController(intersection, new WeightCalculator());
+        controller = new TrafficController(intersection, new ReactiveWeightCalculator());
     }
 
     // inicjalizacja

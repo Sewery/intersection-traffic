@@ -65,10 +65,6 @@ public class Lane {
         return allowedTurn;
     }
 
-    public boolean isEmpty(){
-        return waitingVehicles.isEmpty();
-    }
-
     public int getVehicleCount(){
         return waitingVehicles.size();
     }
@@ -79,5 +75,9 @@ public class Lane {
 
     public Collection<Vehicle> getWaitingVehicles(){
         return Collections.unmodifiableCollection(waitingVehicles);
+    }
+
+    public boolean isEmpty() {
+        return waitingVehicles.isEmpty();
     }
 }
