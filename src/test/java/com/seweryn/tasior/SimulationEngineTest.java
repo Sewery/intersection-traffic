@@ -1,6 +1,8 @@
-import com.seweryn.tasior.SimulationEngine;
+package com.seweryn.tasior;
+
 import com.seweryn.tasior.io.SimulationResult;
 import com.seweryn.tasior.io.StepStatus;
+import com.seweryn.tasior.statistics.Statistics;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
@@ -135,11 +137,6 @@ class SimulationEngineTest {
         SimulationEngine engine = new SimulationEngine(RESOURCES + "input6.json");
         List<StepStatus> steps = engine.runSimulation().getStepStatuses();
 
-        System.out.println("Wszystkie stepy:");
-        steps.forEach(s -> System.out.println(s.leftVehicles()));
-        System.out.println("bus1 exit: " + findExitStep(steps, "bus1"));
-        System.out.println("car1 exit: " + findExitStep(steps, "car1"));
-
         assertTrue(findExitStep(steps, "bus1") < findExitStep(steps, "car1"));
     }
 
@@ -178,6 +175,73 @@ class SimulationEngineTest {
                 () -> assertTrue(findExitStep(steps, "car1") < findExitStep(steps, "car3")),
                 () -> assertTrue(findExitStep(steps, "car2") < findExitStep(steps, "car3"))
         );
+    }
+
+    // input10: getStatistics – podstawowe statystyki
+    @Test
+    void input10_shouldReturnCorrectTotalVehiclesProcessed() {
+        SimulationEngine engine = new SimulationEngine(RESOURCES + "input10_statistics.json");
+        SimulationResult result = engine.runSimulation();
+
+        assertNotNull(result.getStatistics(), "Statystyki muszą być obliczone");
+        assertEquals(4, result.getStatistics().totalVehiclesProcessed());
+    }
+
+    @Test
+    void input10_shouldReturnCorrectAverageWaitTime() {
+        SimulationEngine engine = new SimulationEngine(RESOURCES + "input10_statistics.json");
+        Statistics stats = engine.runSimulation().getStatistics();
+
+        assertNotNull(stats);
+        assertTrue(stats.averageWaitTime() > 0,
+                "Średni czas oczekiwania musi być > 0");
+    }
+
+    @Test
+    void input10_statisticsShouldBeNullWithoutGetStatisticsCommand() {
+        // input1 nie ma getStatistics → statistics powinno być null
+        SimulationEngine engine = new SimulationEngine(RESOURCES + "input1.json");
+        assertNull(engine.runSimulation().getStatistics(),
+                "Statystyki powinny być null jeśli getStatistics nie było wywołane");
+    }
+
+    // input11: updateLaneStatus – blokowanie pasa
+    @Test
+    void input11_blockedLaneShouldPreventVehiclesFromExiting() {
+        SimulationEngine engine = new SimulationEngine(RESOURCES + "input11_block.json");
+        SimulationResult result = engine.runSimulation();
+        Statistics stats = result.getStatistics();
+
+        assertNotNull(stats);
+        assertTrue(stats.totalVehiclesStuck() > 0,
+                "Pojazdy na zablokowanym pasie powinny być stuck");
+    }
+
+    @Test
+    void input11_blockedLaneShouldHaveFromAndToStep() {
+        SimulationEngine engine = new SimulationEngine(RESOURCES + "input11_block.json");
+        Statistics stats = engine.runSimulation().getStatistics();
+
+        assertNotNull(stats);
+        assertFalse(stats.blockedLanes().isEmpty(), "Musi być zablokowany pas");
+
+        Statistics.BlockedLaneStat blocked = stats.blockedLanes().get(0);
+        assertTrue(blocked.blockedFromStep() >= 0, "fromStep musi być >= 0");
+        assertEquals(-1, blocked.blockedToStep(),
+                "Pas nadal zablokowany → toStep=-1");
+    }
+
+    @Test
+    void input11_unblockedLaneShouldHaveToStep() {
+        SimulationEngine engine = new SimulationEngine(RESOURCES + "input11_unblock.json");
+        Statistics stats = engine.runSimulation().getStatistics();
+
+        assertNotNull(stats);
+        Statistics.BlockedLaneStat blocked = stats.blockedLanes().get(0);
+        assertNotEquals(-1, blocked.blockedToStep(),
+                "Pas odblokowany → toStep != -1");
+        assertTrue(blocked.blockedToStep() > blocked.blockedFromStep(),
+                "toStep musi być po fromStep");
     }
 
     // helpers

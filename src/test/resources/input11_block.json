@@ -2,14 +2,8 @@
   "commands": [
     { "type": "addVehicle", "vehicleId": "car1", "startRoad": "north", "endRoad": "south" },
     { "type": "addVehicle", "vehicleId": "car2", "startRoad": "north", "endRoad": "south" },
-    { "type": "addVehicle", "vehicleId": "car3", "startRoad": "east",  "endRoad": "west"  },
-    { "type": "addVehicle", "vehicleId": "car4", "startRoad": "east",  "endRoad": "west"  },
     { "type": "step" },
-    { "type": "step" },
-    { "type": "step" },
-    { "type": "step" },
-    { "type": "step" },
-    { "type": "step" },
+    { "type": "updateLaneStatus", "road": "north", "turn": "STRAIGHT", "blocked": true },
     { "type": "step" },
     { "type": "step" },
     { "type": "getStatistics" }

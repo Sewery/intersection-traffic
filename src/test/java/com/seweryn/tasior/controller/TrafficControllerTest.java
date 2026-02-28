@@ -1,4 +1,4 @@
-package controller;
+package com.seweryn.tasior.controller;
 
 import com.seweryn.tasior.controller.TrafficController;
 import com.seweryn.tasior.controller.ReactiveWeightCalculator;

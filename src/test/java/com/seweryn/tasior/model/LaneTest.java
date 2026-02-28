@@ -1,4 +1,4 @@
-package model;
+package com.seweryn.tasior.model;
 
 import com.seweryn.tasior.model.*;
 import org.junit.jupiter.api.BeforeEach;

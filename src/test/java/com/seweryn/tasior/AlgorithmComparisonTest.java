@@ -1,4 +1,5 @@
-import com.seweryn.tasior.SimulationEngine;
+package com.seweryn.tasior;
+
 import com.seweryn.tasior.io.SimulationResult;
 import com.seweryn.tasior.io.StepStatus;
 import org.junit.jupiter.api.Test;
