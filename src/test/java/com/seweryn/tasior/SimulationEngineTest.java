@@ -4,6 +4,8 @@ import com.seweryn.tasior.io.SimulationResult;
 import com.seweryn.tasior.io.StepStatus;
 import com.seweryn.tasior.statistics.Statistics;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 
 import java.util.List;
 
@@ -13,7 +15,24 @@ class SimulationEngineTest {
 
     private static final String RESOURCES = "src/test/resources/";
 
-    // input1: podstawowy NS + EW
+
+    @ParameterizedTest
+    @CsvSource({
+            "input1.json, 4",
+            "input2.json, 5",
+            "input3.json, 8",
+            "input4.json, 0",
+            "input5.json, 9",
+            "input6.json, 12",
+            "input7.json, 11",
+            "input8.json, 4",
+    })
+    void allVehiclesShouldExit(String file, int expected) {
+        SimulationEngine engine = new SimulationEngine(RESOURCES + file);
+        assertEquals(expected, countExited(engine.runSimulation()));
+    }
+
+    // input1: basic NS + EW
 
     @Test
     void vehicleType_defaultShouldBeCar() {
@@ -34,7 +53,7 @@ class SimulationEngineTest {
         assertEquals(4, countExited(engine.runSimulation()));
     }
 
-    // input2: FIFO jeden pas
+    // input2: FIFO single lane
 
     @Test
     void input2_vehiclesShouldExitInFifoOrder() {
@@ -57,15 +76,7 @@ class SimulationEngineTest {
         );
     }
 
-    @Test
-    void input2_allVehiclesShouldExit() {
-        SimulationEngine engine = new SimulationEngine(RESOURCES + "input2.json");
-        long totalExited = countExited(engine.runSimulation());
-
-        assertEquals(5, totalExited);
-    }
-
-    // input3: brak kolizji NS i EW naprzemiennie
+    // input3: no collision, NS and EW alternate
 
     @Test
     void input3_allVehiclesShouldExit() {
@@ -88,25 +99,7 @@ class SimulationEngineTest {
         });
     }
 
-    // input4: puste skrzyżowanie
-
-    @Test
-    void input4_emptyIntersectionShouldReturnEmptySteps() {
-        SimulationEngine engine = new SimulationEngine(RESOURCES + "input4.json");
-        engine.runSimulation().getStepStatuses().forEach(step ->
-                assertTrue(step.leftVehicles().isEmpty())
-        );
-    }
-
-    // input5: wszystkie kierunki, brak kolizji
-
-    @Test
-    void input5_allVehiclesShouldExit() {
-        SimulationEngine engine = new SimulationEngine(RESOURCES + "input5.json");
-        long totalExited = countExited(engine.runSimulation());
-
-        assertEquals(9, totalExited);
-    }
+    // input5: all directions, no collision
 
     @Test
     void input5_nsAndEwShouldNeverExitInSameStep() {
@@ -124,14 +117,7 @@ class SimulationEngineTest {
         });
     }
 
-    // input6: dynamiczny ruch + bus priority
-    @Test
-    void input6_allVehiclesShouldExit() {
-        SimulationEngine engine = new SimulationEngine(RESOURCES + "input6.json");
-        long totalExited = countExited(engine.runSimulation());
-
-        assertEquals(12, totalExited);
-    }
+    // input6: dynamic traffic + bus priority
     @Test
     void input6_busShouldExitBeforeCars() {
         SimulationEngine engine = new SimulationEngine(RESOURCES + "input6.json");
@@ -140,7 +126,8 @@ class SimulationEngineTest {
         assertTrue(findExitStep(steps, "bus1") < findExitStep(steps, "car1"));
     }
 
-    // input7: zagłodzenie - pojazd stoi, gdy z innej strony jedzie strumień aut
+    // input7: starvation – vehicle stuck while stream dominates from other direction
+
     @Test
     void input7_starvingVehicleShouldEventuallyExit() {
         SimulationEngine engine = new SimulationEngine(RESOURCES + "input7.json");
@@ -158,7 +145,8 @@ class SimulationEngineTest {
         assertEquals(11, totalExited);
     }
 
-    //input 8: dynamiczny ruch w trakcie symulacji
+    // input8: dynamic traffic during simulation
+
     @Test
     void input8_allVehiclesShouldExit() {
         SimulationEngine engine = new SimulationEngine(RESOURCES + "input8.json");
@@ -170,20 +158,19 @@ class SimulationEngineTest {
         SimulationEngine engine = new SimulationEngine(RESOURCES + "input8.json");
         List<StepStatus> steps = engine.runSimulation().getStepStatuses();
 
-        // car1 i car2 dodane przed stepami – powinny wyjechać przed car3
         assertAll(
                 () -> assertTrue(findExitStep(steps, "car1") < findExitStep(steps, "car3")),
                 () -> assertTrue(findExitStep(steps, "car2") < findExitStep(steps, "car3"))
         );
     }
 
-    // input10: getStatistics – podstawowe statystyki
+    // input10: getStatistics
+
     @Test
     void input10_shouldReturnCorrectTotalVehiclesProcessed() {
         SimulationEngine engine = new SimulationEngine(RESOURCES + "input10_statistics.json");
         SimulationResult result = engine.runSimulation();
-
-        assertNotNull(result.getStatistics(), "Statystyki muszą być obliczone");
+        assertNotNull(result.getStatistics());
         assertEquals(4, result.getStatistics().totalVehiclesProcessed());
     }
 
@@ -191,84 +178,66 @@ class SimulationEngineTest {
     void input10_shouldReturnCorrectAverageWaitTime() {
         SimulationEngine engine = new SimulationEngine(RESOURCES + "input10_statistics.json");
         Statistics stats = engine.runSimulation().getStatistics();
-
         assertNotNull(stats);
-        assertTrue(stats.averageWaitTime() >= 1.0 && stats.averageWaitTime() <= 8.0,
-                "Średni czas oczekiwania powinien być między 1 a 8");
+        assertTrue(stats.averageWaitTime() >= 1.0 && stats.averageWaitTime() <= 8.0);
     }
 
     @Test
     void input10_statisticsShouldBeNullWithoutGetStatisticsCommand() {
-        // input1 nie ma getStatistics → statistics powinno być null
         SimulationEngine engine = new SimulationEngine(RESOURCES + "input1.json");
-        assertNull(engine.runSimulation().getStatistics(),
-                "Statystyki powinny być null jeśli getStatistics nie było wywołane");
+        assertNull(engine.runSimulation().getStatistics());
     }
 
-    // input11: updateLaneStatus – blokowanie pasa
+    // input11: updateLaneStatus – lane blocking
+
     @Test
     void input11_blockedLaneShouldPreventVehiclesFromExiting() {
         SimulationEngine engine = new SimulationEngine(RESOURCES + "input11_block.json");
-        SimulationResult result = engine.runSimulation();
-        Statistics stats = result.getStatistics();
-
-        assertNotNull(stats);
-        assertTrue(stats.totalVehiclesStuck() > 0,
-                "Pojazdy na zablokowanym pasie powinny być stuck");
+        assertTrue(engine.runSimulation().getStatistics().totalVehiclesStuck() > 0);
     }
 
     @Test
     void input11_vehiclesShouldExitAfterUnblock() {
         SimulationEngine engine = new SimulationEngine(RESOURCES + "input11_unblock.json");
-        assertTrue(countExited(engine.runSimulation()) > 0,
-                "Po odblokowaniu pojazdy powinny wyjechać");
+        assertTrue(countExited(engine.runSimulation()) > 0);
     }
 
     @Test
     void input11_blockedLaneShouldHaveFromAndToStep() {
         SimulationEngine engine = new SimulationEngine(RESOURCES + "input11_block.json");
         Statistics stats = engine.runSimulation().getStatistics();
-
-        assertNotNull(stats);
-        assertFalse(stats.blockedLanes().isEmpty(), "Musi być zablokowany pas");
-
         Statistics.BlockedLaneStat blocked = stats.blockedLanes().get(0);
-        assertTrue(blocked.blockedFromStep() >= 0, "fromStep musi być >= 0");
-        assertEquals(-1, blocked.blockedToStep(),
-                "Pas nadal zablokowany → toStep=-1");
+        assertTrue(blocked.blockedFromStep() >= 0);
+        assertEquals(-1, blocked.blockedToStep());
     }
 
     @Test
     void input11_unblockedLaneShouldHaveToStep() {
         SimulationEngine engine = new SimulationEngine(RESOURCES + "input11_unblock.json");
         Statistics stats = engine.runSimulation().getStatistics();
-
-        assertNotNull(stats);
         Statistics.BlockedLaneStat blocked = stats.blockedLanes().get(0);
-        assertNotEquals(-1, blocked.blockedToStep(),
-                "Pas odblokowany → toStep != -1");
-        assertTrue(blocked.blockedToStep() > blocked.blockedFromStep(),
-                "toStep musi być po fromStep");
+        assertNotEquals(-1, blocked.blockedToStep());
+        assertTrue(blocked.blockedToStep() > blocked.blockedFromStep());
     }
 
 
-    //input_low_maxwait - maxWaitTime
+    // input_low_maxwait – starvation triggered earlier with lower maxWaitTime
+
     @Test
     void configure_lowMaxWaitTime_shouldTriggerStarvationFaster() {
         SimulationEngine engineLow     = new SimulationEngine(RESOURCES + "input_low_maxwait.json");
         SimulationEngine engineDefault = new SimulationEngine(RESOURCES + "input_default_maxwait.json");
 
-        int exitLow = findExitStep(engineLow.runSimulation().getStepStatuses(),"starving_car");
-        int exitDefault = findExitStep(engineDefault.runSimulation().getStepStatuses(),"starving_car");
-        System.out.println(exitLow);
-        System.out.println(exitDefault);
-        assertNotEquals(-1, exitLow,"starving_car musi wyjechać przy niskim maxWaitTime");
-        assertNotEquals(-1, exitDefault,"starving_car musi wyjechać przy domyślnym maxWaitTime");
-        assertTrue(exitLow < exitDefault,
-                "Niższy maxWaitTime powinien przepuścić starving_car szybciej");
+        int exitLow     = findExitStep(engineLow.runSimulation().getStepStatuses(),"starving_car");
+        int exitDefault = findExitStep(engineDefault.runSimulation().getStepStatuses(), "starving_car");
+
+        assertNotEquals(-1, exitLow);
+        assertNotEquals(-1, exitDefault);
+        assertTrue(exitLow < exitDefault);
     }
 
-    // input_partial_configure – częściowa konfiguracja
+    // input_partial_configure – partial algorithm reconfiguration
+
     @Test
     void partialConfigure_updatedFieldShouldTakeEffect() {
         SimulationEngine engine = new SimulationEngine(RESOURCES + "input_partial_configure.json");
@@ -277,31 +246,26 @@ class SimulationEngineTest {
         int bus2Exit = findExitStep(steps, "bus2");
         int car2Exit = findExitStep(steps, "car2");
 
-        assertNotEquals(-1, bus2Exit, "bus2 musi wyjechać");
-        assertNotEquals(-1, car2Exit, "car2 musi wyjechać");
-        assertTrue(bus2Exit < car2Exit,
-                "busPriority zmieniony na 20 → bus2 powinien wyjechać przed car2");
+        assertNotEquals(-1, bus2Exit);
+        assertNotEquals(-1, car2Exit);
+        assertTrue(bus2Exit < car2Exit);
     }
 
     @Test
     void partialConfigure_unspecifiedFieldsShouldNotResetToDefault() {
-        // pierwsza konfiguracja: busPriority=5, yellowTime=5
-        // druga konfiguracja: tylko busPriority=20
-        // → carPriority=1.0 i yellowTime=5 powinny zostać zachowane
-        // → bus1 (przed drugą konfiguracją) nadal korzysta z busPriority=5
         SimulationEngine engine = new SimulationEngine(RESOURCES + "input_partial_configure.json");
         List<StepStatus> steps = engine.runSimulation().getStepStatuses();
 
         int bus1Exit = findExitStep(steps, "bus1");
         int car1Exit = findExitStep(steps, "car1");
 
-        assertNotEquals(-1, bus1Exit, "bus1 musi wyjechać");
-        assertNotEquals(-1, car1Exit, "car1 musi wyjechać");
-        assertTrue(bus1Exit <= car1Exit,
-                "carPriority nie zresetowane → bus1 nadal ma priorytet nad car1");
+        assertNotEquals(-1, bus1Exit);
+        assertNotEquals(-1, car1Exit);
+        assertTrue(bus1Exit <= car1Exit);
     }
 
     // helpers
+
     private int findExitStep(List<StepStatus> steps, String vehicleId) {
         for (int i = 0; i < steps.size(); i++) {
             if (steps.get(i).leftVehicles().contains(vehicleId)) return i;

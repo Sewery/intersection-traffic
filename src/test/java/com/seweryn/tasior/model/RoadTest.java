@@ -18,6 +18,8 @@ class RoadTest {
         road = Road.createThreeLineRoad(Direction.NORTH);
     }
 
+    // turn resolution
+
     @Test
     void northToSouthShouldBeStraight() {
         road.addVehicleToLane(Direction.SOUTH, new Vehicle("car1", 0));

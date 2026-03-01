@@ -17,7 +17,7 @@ class LaneTest {
         lane = new Lane(Turn.STRAIGHT);
     }
 
-    // stan początkowy
+    // initial state
 
     @Test
     void newLaneShouldBeEmpty() {
@@ -40,7 +40,7 @@ class LaneTest {
         assertFalse(lane.isPassable());
     }
 
-    // dodawanie pojazdów
+    // adding vehicles
 
     @Test
     void addVehicleShouldIncreaseCount() {

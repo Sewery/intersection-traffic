@@ -8,7 +8,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class TrafficLightTest {
 
-    // stan początkowy
+    // initial state
 
     @Test
     void newTrafficLightShouldBeRed() {
@@ -22,7 +22,7 @@ class TrafficLightTest {
         assertFalse(light.isInTransition());
     }
 
-    // przejście do czerwonego
+    // transition to red
 
     @Test
     void startTransitionToRedShouldSetYellowToRed() {
@@ -55,7 +55,7 @@ class TrafficLightTest {
         assertTrue(light.isInTransition());
     }
 
-    // przejście do zielonego
+    // transition to green
 
     @Test
     void startTransitionToGreenShouldSetYellowToGreen() {
@@ -78,7 +78,7 @@ class TrafficLightTest {
         assertFalse(light.isInTransition());
     }
 
-    // tick na stabilnym stanie
+    // tick on stable state
 
     @Test
     void tickOnGreenShouldStayGreen() {
@@ -96,7 +96,7 @@ class TrafficLightTest {
         assertEquals(TrafficLight.State.RED, light.getState());
     }
 
-    // pełny cykl
+    // full cycle
 
     @Test
     void fullCycleGreenToRedToGreen() {

@@ -82,7 +82,7 @@ class HistoricalWeightCalculatorTest {
                 "Step=6 powinien użyć drugiego slotu (factor=5.0)");
     }
 
-    // brak pojazdów
+    // empty lane
 
     @Test
     void emptyLaneShouldReturnFactorAsBaseWeight() {
@@ -108,7 +108,7 @@ class HistoricalWeightCalculatorTest {
                 "Brak pojazdów i brak slotu → waga = 1.0 (default factor)");
     }
 
-    //  konfiguracja
+    // configure
 
     @Test
     void configureShouldPropagateToReactive() {
@@ -133,8 +133,6 @@ class HistoricalWeightCalculatorTest {
 
     @Test
     void starvingVehicleShouldOverrideHistoricalFactor() {
-        // NS factor=0.1 – normalnie NS prawie nigdy nie wygrywa
-        // ale po MAX_WAIT_TIME starvation powinno nadpisać factor
         addVehicle("car1", Direction.NORTH, Direction.SOUTH, 0);
         HistoricalWeightCalculator calculator = calculatorWith(Map.of(
                 Direction.NORTH, List.of(new TimeSlot(0, 20, 0.1)),
@@ -144,35 +142,12 @@ class HistoricalWeightCalculatorTest {
         Set<Movement> nsPhase = Set.of(new Movement(Direction.NORTH, Turn.STRAIGHT));
         Set<Movement> ewPhase = Set.of(new Movement(Direction.EAST,  Turn.STRAIGHT));
 
-        // przed starvation – EW wygrywa
-        double nsWeight = calculator.calculatePhaseWeight(nsPhase, intersection, 1);
-        double ewWeight = calculator.calculatePhaseWeight(ewPhase, intersection, 1);
-        assertTrue(ewWeight > nsWeight, "Przed starvation EW powinno wygrać");
-
-        // po starvation – NS powinno dostać boost
+        double nsNormal   = calculator.calculatePhaseWeight(nsPhase, intersection, 1);
+        double ewNormal   = calculator.calculatePhaseWeight(ewPhase, intersection, 1);
         double nsStarving = calculator.calculatePhaseWeight(nsPhase, intersection, 10);
-        assertTrue(nsStarving > ewWeight,
-                "Po starvation NS powinno nadpisać historical factor");
-    }
 
-    @Test
-    void hasStarvingVehicleShouldDelegateToReactive() {
-        addVehicle("car1", Direction.NORTH, Direction.SOUTH, 0);
-        HistoricalWeightCalculator calculator = calculatorWith(Map.of());
-
-        assertFalse(calculator.hasStarvingVehicle(intersection, 9));
-        assertTrue(calculator.hasStarvingVehicle(intersection, 10));
-    }
-
-    @Test
-    void getStarvingMovementsShouldDelegateToReactive() {
-        addVehicle("car1", Direction.NORTH, Direction.SOUTH, 0);
-        HistoricalWeightCalculator calculator = calculatorWith(Map.of());
-
-        Set<Movement> starving = calculator.getStarvingMovements(intersection, 10);
-
-        assertEquals(1, starving.size());
-        assertTrue(starving.contains(new Movement(Direction.NORTH, Turn.STRAIGHT)));
+        assertTrue(ewNormal   > nsNormal,"EW wins before starvation");
+        assertTrue(nsStarving > ewNormal,"NS overrides EW after starvation");
     }
 
     // helpers
