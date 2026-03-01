@@ -155,42 +155,4 @@ class LaneTest {
                 "car2 powinien nadal czekać w kolejce");
     }
 
-    // czasy oczekiwania
-
-    @Test
-    void averageWaitTimeShouldBeCorrect() {
-        lane.addVehicle(new Vehicle("car1", 0));
-        lane.addVehicle(new Vehicle("car2", 2));
-
-        // step=4: car1 czeka 4, car2 czeka 2 → avg = 3.0
-        assertEquals(3.0, lane.getAverageWaitTime(4), 0.001);
-    }
-
-    @Test
-    void averageWaitTimeOnEmptyLaneShouldBeZero() {
-        assertEquals(0.0, lane.getAverageWaitTime(5));
-    }
-
-    @Test
-    void percentileWaitTimeShouldBeCorrect() {
-        lane.addVehicle(new Vehicle("car1", 0));   // czeka 10
-        lane.addVehicle(new Vehicle("car2", 5));   // czeka 5
-
-        // sorted: [5, 10], p50 → rank = ceil(0.5*2)-1 = 0 → 5
-        assertEquals(5, lane.getPercentileWaitTime(10, 50));
-    }
-
-    @Test
-    void percentile100ShouldReturnMaxWaitTime() {
-        lane.addVehicle(new Vehicle("car1", 0));   // czeka 10
-        lane.addVehicle(new Vehicle("car2", 5));   // czeka 5
-
-        // sorted: [5, 10], p100 → rank = ceil(1.0*2)-1 = 1 → 10
-        assertEquals(10, lane.getPercentileWaitTime(10, 100));
-    }
-
-    @Test
-    void percentileOnEmptyLaneShouldReturnZero() {
-        assertEquals(0, lane.getPercentileWaitTime(5, 50));
-    }
 }

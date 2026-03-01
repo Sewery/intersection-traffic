@@ -1,0 +1,20 @@
+{
+  "commands": [
+    { "type": "configureAlgorithm", "carPriority": 1.0, "busPriority": 5.0, "yellowTime": 1 },
+    { "type": "addVehicle", "vehicleId": "car1", "vehicleType": "CAR", "startRoad": "north", "endRoad": "south" },
+    { "type": "addVehicle", "vehicleId": "bus1", "vehicleType": "BUS", "startRoad": "east",  "endRoad": "west"  },
+    { "type": "step" },
+    { "type": "step" },
+    { "type": "step" },
+    { "type": "step" },
+    { "type": "step" },
+    { "type": "configureAlgorithm", "busPriority": 20.0 },
+    { "type": "addVehicle", "vehicleId": "car2", "vehicleType": "CAR", "startRoad": "south", "endRoad": "north" },
+    { "type": "addVehicle", "vehicleId": "bus2", "vehicleType": "BUS", "startRoad": "west",  "endRoad": "east"  },
+    { "type": "step" },
+    { "type": "step" },
+    { "type": "step" },
+    { "type": "step" },
+    { "type": "step" }
+  ]
+}

@@ -1,0 +1,31 @@
+{
+  "commands": [
+    { "type": "addVehicle", "vehicleId": "stream1",      "vehicleType": "CAR", "startRoad": "north", "endRoad": "south" },
+    { "type": "addVehicle", "vehicleId": "stream2",      "vehicleType": "CAR", "startRoad": "north", "endRoad": "south" },
+    { "type": "addVehicle", "vehicleId": "stream3",      "vehicleType": "CAR", "startRoad": "north", "endRoad": "south" },
+    { "type": "addVehicle", "vehicleId": "stream4",      "vehicleType": "CAR", "startRoad": "south", "endRoad": "north" },
+    { "type": "addVehicle", "vehicleId": "stream5",      "vehicleType": "CAR", "startRoad": "south", "endRoad": "north" },
+    { "type": "addVehicle", "vehicleId": "stream6",      "vehicleType": "CAR", "startRoad": "south", "endRoad": "north" },
+    { "type": "addVehicle", "vehicleId": "starving_car", "vehicleType": "CAR", "startRoad": "east",  "endRoad": "west"  },
+    { "type": "step" },
+    { "type": "step" },
+    { "type": "step" },
+    { "type": "step" },
+    { "type": "step" },
+    { "type": "step" },
+    { "type": "step" },
+    { "type": "step" },
+    { "type": "step" },
+    { "type": "step" },
+    { "type": "step" },
+    { "type": "step" },
+    { "type": "step" },
+    { "type": "step" },
+    { "type": "step" },
+    { "type": "step" },
+    { "type": "step" },
+    { "type": "step" },
+    { "type": "step" },
+    { "type": "step" }
+  ]
+}

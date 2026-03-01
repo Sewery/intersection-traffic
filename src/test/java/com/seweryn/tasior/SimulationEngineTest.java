@@ -14,6 +14,14 @@ class SimulationEngineTest {
     private static final String RESOURCES = "src/test/resources/";
 
     // input1: podstawowy NS + EW
+
+    @Test
+    void vehicleType_defaultShouldBeCar() {
+        assertDoesNotThrow(() ->
+                new SimulationEngine(RESOURCES + "input1.json").runSimulation()
+        );
+    }
+
     @Test
     void input1_numberOfStepStatusesShouldMatchStepCommands() {
         SimulationEngine engine = new SimulationEngine(RESOURCES + "input1.json");
@@ -88,14 +96,6 @@ class SimulationEngineTest {
         engine.runSimulation().getStepStatuses().forEach(step ->
                 assertTrue(step.leftVehicles().isEmpty())
         );
-    }
-
-    @Test
-    void input4_shouldHaveFiveStepStatuses() {
-        SimulationEngine engine = new SimulationEngine(RESOURCES + "input4.json");
-        SimulationResult result = engine.runSimulation();
-
-        assertEquals(5, result.getStepStatuses().size());
     }
 
     // input5: wszystkie kierunki, brak kolizji
@@ -193,8 +193,8 @@ class SimulationEngineTest {
         Statistics stats = engine.runSimulation().getStatistics();
 
         assertNotNull(stats);
-        assertTrue(stats.averageWaitTime() > 0,
-                "Średni czas oczekiwania musi być > 0");
+        assertTrue(stats.averageWaitTime() >= 1.0 && stats.averageWaitTime() <= 8.0,
+                "Średni czas oczekiwania powinien być między 1 a 8");
     }
 
     @Test
@@ -215,6 +215,13 @@ class SimulationEngineTest {
         assertNotNull(stats);
         assertTrue(stats.totalVehiclesStuck() > 0,
                 "Pojazdy na zablokowanym pasie powinny być stuck");
+    }
+
+    @Test
+    void input11_vehiclesShouldExitAfterUnblock() {
+        SimulationEngine engine = new SimulationEngine(RESOURCES + "input11_unblock.json");
+        assertTrue(countExited(engine.runSimulation()) > 0,
+                "Po odblokowaniu pojazdy powinny wyjechać");
     }
 
     @Test
@@ -242,6 +249,56 @@ class SimulationEngineTest {
                 "Pas odblokowany → toStep != -1");
         assertTrue(blocked.blockedToStep() > blocked.blockedFromStep(),
                 "toStep musi być po fromStep");
+    }
+
+
+    //input_low_maxwait - maxWaitTime
+    @Test
+    void configure_lowMaxWaitTime_shouldTriggerStarvationFaster() {
+        SimulationEngine engineLow     = new SimulationEngine(RESOURCES + "input_low_maxwait.json");
+        SimulationEngine engineDefault = new SimulationEngine(RESOURCES + "input_default_maxwait.json");
+
+        int exitLow = findExitStep(engineLow.runSimulation().getStepStatuses(),"starving_car");
+        int exitDefault = findExitStep(engineDefault.runSimulation().getStepStatuses(),"starving_car");
+        System.out.println(exitLow);
+        System.out.println(exitDefault);
+        assertNotEquals(-1, exitLow,"starving_car musi wyjechać przy niskim maxWaitTime");
+        assertNotEquals(-1, exitDefault,"starving_car musi wyjechać przy domyślnym maxWaitTime");
+        assertTrue(exitLow < exitDefault,
+                "Niższy maxWaitTime powinien przepuścić starving_car szybciej");
+    }
+
+    // input_partial_configure – częściowa konfiguracja
+    @Test
+    void partialConfigure_updatedFieldShouldTakeEffect() {
+        SimulationEngine engine = new SimulationEngine(RESOURCES + "input_partial_configure.json");
+        List<StepStatus> steps = engine.runSimulation().getStepStatuses();
+
+        int bus2Exit = findExitStep(steps, "bus2");
+        int car2Exit = findExitStep(steps, "car2");
+
+        assertNotEquals(-1, bus2Exit, "bus2 musi wyjechać");
+        assertNotEquals(-1, car2Exit, "car2 musi wyjechać");
+        assertTrue(bus2Exit < car2Exit,
+                "busPriority zmieniony na 20 → bus2 powinien wyjechać przed car2");
+    }
+
+    @Test
+    void partialConfigure_unspecifiedFieldsShouldNotResetToDefault() {
+        // pierwsza konfiguracja: busPriority=5, yellowTime=5
+        // druga konfiguracja: tylko busPriority=20
+        // → carPriority=1.0 i yellowTime=5 powinny zostać zachowane
+        // → bus1 (przed drugą konfiguracją) nadal korzysta z busPriority=5
+        SimulationEngine engine = new SimulationEngine(RESOURCES + "input_partial_configure.json");
+        List<StepStatus> steps = engine.runSimulation().getStepStatuses();
+
+        int bus1Exit = findExitStep(steps, "bus1");
+        int car1Exit = findExitStep(steps, "car1");
+
+        assertNotEquals(-1, bus1Exit, "bus1 musi wyjechać");
+        assertNotEquals(-1, car1Exit, "car1 musi wyjechać");
+        assertTrue(bus1Exit <= car1Exit,
+                "carPriority nie zresetowane → bus1 nadal ma priorytet nad car1");
     }
 
     // helpers

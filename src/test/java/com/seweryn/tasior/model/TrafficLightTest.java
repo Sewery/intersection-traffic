@@ -1,5 +1,6 @@
 package com.seweryn.tasior.model;
 
+import com.seweryn.tasior.controller.TrafficDefaults;
 import com.seweryn.tasior.model.TrafficLight;
 import org.junit.jupiter.api.Test;
 
@@ -37,7 +38,7 @@ class TrafficLightTest {
         TrafficLight light = new TrafficLight(TrafficLight.State.GREEN);
         light.startTransitionToRed();
 
-        for (int i = 0; i < TrafficLight.YELLOW_TIME; i++) light.tick();
+        for (int i = 0; i < TrafficDefaults.YELLOW_TIME; i++) light.tick();
 
         assertEquals(TrafficLight.State.RED, light.getState());
         assertFalse(light.isInTransition());
@@ -48,7 +49,7 @@ class TrafficLightTest {
         TrafficLight light = new TrafficLight(TrafficLight.State.GREEN);
         light.startTransitionToRed();
 
-        for (int i = 0; i < TrafficLight.YELLOW_TIME - 1; i++) light.tick();
+        for (int i = 0; i < TrafficDefaults.YELLOW_TIME - 1; i++) light.tick();
 
         assertEquals(TrafficLight.State.YELLOW_TO_RED, light.getState());
         assertTrue(light.isInTransition());
@@ -70,7 +71,7 @@ class TrafficLightTest {
         TrafficLight light = new TrafficLight(TrafficLight.State.RED);
         light.startTransitionToGreen();
 
-        for (int i = 0; i < TrafficLight.YELLOW_TIME; i++) light.tick();
+        for (int i = 0; i < TrafficDefaults.YELLOW_TIME; i++) light.tick();
 
         assertEquals(TrafficLight.State.GREEN, light.getState());
         assertTrue(light.isGreen());
@@ -102,11 +103,11 @@ class TrafficLightTest {
         TrafficLight light = new TrafficLight(TrafficLight.State.GREEN);
 
         light.startTransitionToRed();
-        for (int i = 0; i < TrafficLight.YELLOW_TIME; i++) light.tick();
+        for (int i = 0; i < TrafficDefaults.YELLOW_TIME; i++) light.tick();
         assertEquals(TrafficLight.State.RED, light.getState());
 
         light.startTransitionToGreen();
-        for (int i = 0; i < TrafficLight.YELLOW_TIME; i++) light.tick();
+        for (int i = 0; i < TrafficDefaults.YELLOW_TIME; i++) light.tick();
         assertEquals(TrafficLight.State.GREEN, light.getState());
     }
 }

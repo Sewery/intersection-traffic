@@ -7,7 +7,7 @@ import org.junit.jupiter.api.Test;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
-class AlgorithmComparisonTest {
+class AlgorithmModesComparisonTest {
 
     private static final String RESOURCES = "src/test/resources/";
 
