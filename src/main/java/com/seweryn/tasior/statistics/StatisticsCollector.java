@@ -11,7 +11,6 @@ public class StatisticsCollector {
     private final Map<String, Integer> exitSteps = new HashMap<>();
     private final Map<String, Direction> vehicleDirections = new HashMap<>();
     private final Set<String> stuckVehicles = new HashSet<>();
-    private final List<Statistics.BlockedLaneStat> blockedLanes = new ArrayList<>();
 
     private record BlockedLaneEntry(
             Direction road,
@@ -87,7 +86,7 @@ public class StatisticsCollector {
     private Map<Direction, Statistics.RoadStat> computePerRoadStats() {
         Map<Direction, List<String>> byDirection = new HashMap<>();
         arrivalSteps.keySet().forEach(id ->
-                byDirection.computeIfAbsent(vehicleDirections.get(id), k -> new ArrayList<>()).add(id));
+                byDirection.computeIfAbsent(vehicleDirections.get(id), _ -> new ArrayList<>()).add(id));
 
         Map<Direction, Statistics.RoadStat> result = new EnumMap<>(Direction.class);
         byDirection.forEach((dir, vehicles) -> {

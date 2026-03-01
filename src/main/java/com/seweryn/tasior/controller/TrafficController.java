@@ -13,8 +13,6 @@ public class TrafficController{
     private Set<Movement> currentPhase;
     private Set<Movement> nextPhase;
 
-    private static final int LOOK_AHEAD_WINDOW = 3;
-
     public TrafficController(Intersection intersection, WeightCalculator weightCalculator) {
         this.intersection = intersection;
         this.weightCalculator = weightCalculator;
@@ -64,7 +62,7 @@ public class TrafficController{
         double bestWeight = weightCalculator.calculatePhaseWeight(bestPhase, intersection, stepCounter);
 
         double switchingPenalty = currentWeight * TrafficLight.YELLOW_TIME;
-        return ((bestWeight - currentWeight) * LOOK_AHEAD_WINDOW) > switchingPenalty;
+        return (bestWeight - currentWeight) > switchingPenalty;
     }
 
     private void initiateTransition(Set<Movement> bestPhase) {
