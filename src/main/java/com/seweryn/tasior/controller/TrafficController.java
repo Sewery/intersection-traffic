@@ -50,7 +50,7 @@ public class TrafficController{
         Set<Movement> starvingMovements =
                 weightCalculator.getStarvingMovements(intersection, stepCounter);
 
-        // znajdź fazę która obsługuje zagłodzone pojazdy
+        // Find a phase with starving vehicles
         return TrafficCompatibility.getPhaseGroups().stream()
                 .filter(phase -> phase.stream().anyMatch(starvingMovements::contains))
                 .max(Comparator.comparingDouble(
@@ -67,15 +67,21 @@ public class TrafficController{
                 .orElse(currentPhase);
     }
 
-    private boolean shouldSwitch(Set<Movement> bestPhase, int stepCounter) {
+    private boolean shouldSwitch(Set<Movement> targetPhase, int stepCounter) {
         if (currentPhase == null) return true;
-        if (currentPhase.equals(bestPhase)) return false;
+        if (currentPhase.equals(targetPhase)) return false;
+        if (isStarvingSwitch(targetPhase, stepCounter)) return true;
 
-        double currentWeight = weightCalculator.calculatePhaseWeight(currentPhase, intersection, stepCounter);
-        double bestWeight = weightCalculator.calculatePhaseWeight(bestPhase, intersection, stepCounter);
-
+        double currentWeight    = weightCalculator.calculatePhaseWeight(currentPhase, intersection, stepCounter);
+        double targetWeight     = weightCalculator.calculatePhaseWeight(targetPhase,  intersection, stepCounter);
         double switchingPenalty = currentWeight * yellowTime;
-        return (bestWeight - currentWeight) > switchingPenalty;
+
+        return (targetWeight - currentWeight) > switchingPenalty;
+    }
+
+    private boolean isStarvingSwitch(Set<Movement> targetPhase, int stepCounter) {
+        Set<Movement> starving = weightCalculator.getStarvingMovements(intersection, stepCounter);
+        return targetPhase.stream().anyMatch(starving::contains);
     }
 
     private void initiateTransition(Set<Movement> bestPhase) {

@@ -35,7 +35,7 @@ public class HistoricalWeightCalculator implements WeightCalculator {
                     double reactiveWeight = reactive.calculatePhaseWeight(
                             Set.of(m), intersection, currentStep);
 
-                    // starvation nadpisuje historical factor
+                    // starvation overrides historical factor
                     boolean hasStarving = reactive.getStarvingMovements(intersection, currentStep)
                             .contains(m);
                     if (hasStarving) return reactiveWeight;
@@ -43,7 +43,7 @@ public class HistoricalWeightCalculator implements WeightCalculator {
                     double factor = getFactor(m.from(), currentStep);
                     return reactiveWeight > 0.0
                             ? reactiveWeight * factor
-                            : factor;  // baza historyczna gdy brak pojazdów
+                            : factor;  // historical base weight when no vehicles are waiting
                 })
                 .sum();
     }
@@ -55,7 +55,7 @@ public class HistoricalWeightCalculator implements WeightCalculator {
                 .filter(slot -> currentStep >= slot.fromStep() && currentStep <= slot.toStep())
                 .mapToDouble(TimeSlot::factor)
                 .findFirst()
-                .orElse(1.0);  // domyślnie neutralny
+                .orElse(1.0);  // default neutral
     }
 
     @Override

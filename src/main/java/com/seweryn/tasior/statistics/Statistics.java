@@ -12,7 +12,7 @@ public record Statistics(
         List<BlockedLaneStat> blockedLanes,
         Map<Direction, RoadStat> perRoadStats
 ) {
-    public record Percentiles(double p50, double p90, double p95) {}
+    public record Percentiles(double p50, double p75, double p90) {}
     public record BlockedLaneStat(Direction road, String turn, int vehiclesAffected, int blockedFromStep, int blockedToStep) {}
     public record RoadStat(double avgWaitTime, int vehiclesProcessed, int vehiclesStuck) {}
 }

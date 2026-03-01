@@ -24,16 +24,18 @@ public class StatisticsCollector {
 
     public void onEvent(SimulationEvent event) {
         switch (event) {
-            case SimulationEvent.VehicleArrived e -> {
-                arrivalSteps.put(e.vehicleId(), e.step());
-                vehicleDirections.put(e.vehicleId(), e.direction());
+            case SimulationEvent.VehicleArrived(String vehicleId, Direction direction, int step) -> {
+                arrivalSteps.put(vehicleId, step);
+                vehicleDirections.put(vehicleId, direction);
             }
-            case SimulationEvent.VehicleExited e -> exitSteps.put(e.vehicleId(), e.step());
-            case SimulationEvent.VehicleStuck e -> stuckVehicles.add(e.vehicleId());
-            case SimulationEvent.LaneBlocked e -> blockedLaneEntries.add(
-                    new BlockedLaneEntry(e.road(), e.turn(), e.vehiclesAffected(), e.step()));
-            case SimulationEvent.LaneUnblocked e -> unblockedSteps.put(
-                    key(e.road(), e.turn()), e.step());
+            case SimulationEvent.VehicleExited(String vehicleId, int step) ->
+                    exitSteps.put(vehicleId, step);
+            case SimulationEvent.VehicleStuck(String vehicleId, Direction _) ->
+                    stuckVehicles.add(vehicleId);
+            case SimulationEvent.LaneBlocked(Direction road, Turn turn, int vehiclesAffected, int step) ->
+                    blockedLaneEntries.add(new BlockedLaneEntry(road, turn, vehiclesAffected, step));
+            case SimulationEvent.LaneUnblocked(Direction road, Turn turn, int step) ->
+                    unblockedSteps.put(key(road, turn), step);
         }
     }
 
@@ -64,7 +66,7 @@ public class StatisticsCollector {
                 stuckVehicles.size(),
                 waitTimes.stream().mapToInt(i -> i).average().orElse(0.0),
                 computePercentiles(waitTimes),
-                computeBlockedLanes(),   // ← zamiast blockedLanes
+                computeBlockedLanes(),
                 computePerRoadStats()
         );
     }
@@ -73,8 +75,8 @@ public class StatisticsCollector {
         if (sorted.isEmpty()) return new Statistics.Percentiles(0, 0, 0);
         return new Statistics.Percentiles(
                 percentile(sorted, 50),
-                percentile(sorted, 90),
-                percentile(sorted, 95)
+                percentile(sorted, 75),
+                percentile(sorted, 90)
         );
     }
 

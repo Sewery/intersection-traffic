@@ -20,7 +20,7 @@ public class Intersection {
         return roads.stream()
                 .filter(road -> road.getLocation().equals(direction))
                 .findFirst()
-                .orElseThrow();
+                .orElseThrow(() -> new IllegalArgumentException("Road not found for direction: " + direction));
     }
 
     public Road getRoadByLane(Lane lane){

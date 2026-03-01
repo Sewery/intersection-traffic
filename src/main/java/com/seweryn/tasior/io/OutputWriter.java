@@ -14,7 +14,6 @@ public class OutputWriter {
         try {
             ObjectNode root = mapper.createObjectNode();
 
-            // stepStatuses
             ArrayNode stepStatuses = root.putArray("stepStatuses");
             for (StepStatus step : result.getStepStatuses()) {
                 ObjectNode stepNode = stepStatuses.addObject();
@@ -22,7 +21,6 @@ public class OutputWriter {
                 step.leftVehicles().forEach(leftVehicles::add);
             }
 
-            // statistics – tylko jeśli getStatistics było wywołane
             if (result.getStatistics() != null) {
                 root.set("statistics", buildStatisticsNode(result.getStatistics()));
             }
@@ -44,8 +42,8 @@ public class OutputWriter {
         // percentiles
         ObjectNode percentiles = node.putObject("percentiles");
         percentiles.put("p50", stats.percentiles().p50());
+        percentiles.put("p75", stats.percentiles().p75());
         percentiles.put("p90", stats.percentiles().p90());
-        percentiles.put("p95", stats.percentiles().p95());
 
         // blockedLanes
         ArrayNode blockedLanes = node.putArray("blockedLanes");

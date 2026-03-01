@@ -19,7 +19,7 @@ import java.util.Map;
 public class SimulationEngine {
     private final List<Command> commands;
     private final Intersection intersection;
-    private TrafficController controller;
+    private final TrafficController controller;
     private final SimulationResult result;
     private final StatisticsCollector statisticsCollector = new StatisticsCollector();
     private int stepCounter;
@@ -72,7 +72,7 @@ public class SimulationEngine {
                 }
             } else {
                 statisticsCollector.onEvent(new SimulationEvent.LaneUnblocked(
-                        command.road(), command.turn(), stepCounter));  // ← odblokowanie
+                        command.road(), command.turn(), stepCounter));
             }
             lane.setBlocked(command.blocked());
         });
@@ -98,7 +98,7 @@ public class SimulationEngine {
     private void handleStep() {
         List<String> leftThisStep = new ArrayList<>();
 
-        // faza 1 – pojazdy które były na skrzyżowaniu (CROSSING) opuszczają je
+        // phase 1 – vehicles that were crossing exit the intersection
         for (Road road : intersection.getRoads()) {
             for (Lane lane : road.getLanes()) {
                 lane.finishCrossing()
@@ -111,10 +111,10 @@ public class SimulationEngine {
             }
         }
 
-        // zmień fazę świateł
+        // update traffic lights
         controller.executeStep(stepCounter);
 
-        // faza 2 – pojazdy z zielonych pasów wjeżdżają na skrzyżowanie
+        // phase 2 – vehicles on green lanes enter the intersection
         for (Road road : intersection.getRoads()) {
             for (Lane lane : road.getLanes()) {
                 if (lane.isPassable() && !lane.isEmpty() && !lane.isCrossing()) {

@@ -66,12 +66,10 @@ public class ReactiveWeightCalculator implements WeightCalculator{
     @Override
     public Set<Movement> getStarvingMovements(Intersection intersection, int currentStep) {
         return intersection.getRoads().stream()
-                .flatMap(road -> road.getLanes().stream())
-                .filter(lane -> lane.getWaitingVehicles().stream()
-                        .anyMatch(v -> v.waitTime(currentStep) >= maxWaitTime))
-                .map(lane -> new Movement(
-                        intersection.getRoadByLane(lane).getLocation(),
-                        lane.getAllowedTurn()))
+                .flatMap(road -> road.getLanes().stream()
+                        .filter(lane -> lane.getWaitingVehicles().stream()
+                                .anyMatch(v -> v.waitTime(currentStep) >= maxWaitTime))
+                        .map(lane -> new Movement(road.getLocation(), lane.getAllowedTurn())))
                 .collect(Collectors.toSet());
     }
 }
