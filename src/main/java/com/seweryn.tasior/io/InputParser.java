@@ -6,6 +6,7 @@ import com.seweryn.tasior.commands.*;
 import com.seweryn.tasior.controller.TimeSlot;
 import com.seweryn.tasior.model.Direction;
 import com.seweryn.tasior.model.Turn;
+import com.seweryn.tasior.model.VehicleType;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -29,7 +30,10 @@ public class InputParser {
                     case "addVehicle" -> new AddVehicleCommand(
                             Direction.fromString(node.get("startRoad").asText()),
                             Direction.fromString(node.get("endRoad").asText()),
-                            node.get("vehicleId").asText()
+                            node.get("vehicleId").asText(),
+                            node.has("vehicleType")
+                                    ? VehicleType.valueOf(node.get("vehicleType").asText().toUpperCase())
+                                    : VehicleType.CAR   // domyślnie CAR
                     );
                     case "step"-> Command.STEP;
                     case "configureAlgorithm" -> parseConfigureAlgorithm(node);

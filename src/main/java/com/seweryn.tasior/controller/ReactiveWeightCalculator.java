@@ -48,7 +48,10 @@ public class ReactiveWeightCalculator implements WeightCalculator{
     }
 
     private double getPriority(Vehicle v) {
-        return v.vehicleId().startsWith("bus") ? busPriority : carPriority;
+        return switch (v.type()) {
+            case BUS -> busPriority;
+            case CAR -> carPriority;
+        };
     }
 
     @Override

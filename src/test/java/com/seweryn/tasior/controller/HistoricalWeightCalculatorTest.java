@@ -18,15 +18,6 @@ class HistoricalWeightCalculatorTest {
     void setUp() {
         intersection = new Intersection();
     }
-    // helpers
-
-    private HistoricalWeightCalculator calculatorWith(Map<Direction, List<TimeSlot>> data) {
-        return new HistoricalWeightCalculator(data);
-    }
-
-    private void addVehicle(String vehicleId, Direction from, Direction to, int arrivalStep) {
-        intersection.getRoad(from).addVehicleToLane(to, new Vehicle(vehicleId, arrivalStep));
-    }
 
     // factor
 
@@ -121,11 +112,11 @@ class HistoricalWeightCalculatorTest {
 
     @Test
     void configureShouldPropagateToReactive() {
-        addVehicle("bus1", Direction.NORTH, Direction.SOUTH, 0);
+        addVehicle("bus1", Direction.NORTH, Direction.SOUTH, 0,VehicleType.BUS);
         HistoricalWeightCalculator calculator = calculatorWith(Map.of(
                 Direction.NORTH, List.of(new TimeSlot(0, 10, 2.0))
         ));
-        calculator.configure(1.0, 10.0);  // busPriority=10.0
+        calculator.configure(1.0, 10.0);
 
         Set<Movement> phase = Set.of(new Movement(Direction.NORTH, Turn.STRAIGHT));
         double weight = calculator.calculatePhaseWeight(phase, intersection, 1);
@@ -182,5 +173,18 @@ class HistoricalWeightCalculatorTest {
 
         assertEquals(1, starving.size());
         assertTrue(starving.contains(new Movement(Direction.NORTH, Turn.STRAIGHT)));
+    }
+
+    // helpers
+    private HistoricalWeightCalculator calculatorWith(Map<Direction, List<TimeSlot>> data) {
+        return new HistoricalWeightCalculator(data);
+    }
+
+    private void addVehicle(String vehicleId, Direction from, Direction to, int arrivalStep) {
+        addVehicle(vehicleId, from, to, arrivalStep, VehicleType.CAR);
+    }
+
+    private void addVehicle(String vehicleId, Direction from, Direction to, int arrivalStep, VehicleType type) {
+        intersection.getRoad(from).addVehicleToLane(to, new Vehicle(vehicleId, arrivalStep,type));
     }
 }

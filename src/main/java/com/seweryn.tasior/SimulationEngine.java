@@ -119,11 +119,11 @@ public class SimulationEngine {
         stepCounter++;
     }
 
-    private void handleAddVehicle(AddVehicleCommand command){
+    private void handleAddVehicle(AddVehicleCommand command) {
         Road road = intersection.getRoad(command.startRoad());
         road.addVehicleToLane(
                 command.endRoad(),
-                new Vehicle(command.vehicleId(),stepCounter)
+                new Vehicle(command.vehicleId(), stepCounter, command.vehicleType())
         );
         statisticsCollector.onEvent(new SimulationEvent.VehicleArrived(
                 command.vehicleId(), command.startRoad(), stepCounter));

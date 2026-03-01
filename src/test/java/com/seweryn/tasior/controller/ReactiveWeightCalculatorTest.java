@@ -39,7 +39,7 @@ class ReactiveWeightCalculatorTest {
 
     @Test
     void busShouldHaveDefaultPriorityFive() {
-        addVehicle("bus1", Direction.NORTH, Direction.SOUTH, 0);
+        addVehicle("bus1", Direction.NORTH, Direction.SOUTH, 0, VehicleType.BUS);
         Set<Movement> phase = Set.of(new Movement(Direction.NORTH, Turn.STRAIGHT));
 
         // waitTime=1, (1.0 + 1^1.5) * 5.0 = 10.0
@@ -70,7 +70,7 @@ class ReactiveWeightCalculatorTest {
     @Test
     void configureShouldChangeBusPriority() {
         calculator.configure(1.0, 10.0);
-        addVehicle("bus1", Direction.NORTH, Direction.SOUTH, 0);
+        addVehicle("bus1", Direction.NORTH, Direction.SOUTH, 0,VehicleType.BUS);
         Set<Movement> phase = Set.of(new Movement(Direction.NORTH, Turn.STRAIGHT));
 
         // waitTime=1, (1.0 + 1^1.5) * 10.0 = 20.0
@@ -102,6 +102,10 @@ class ReactiveWeightCalculatorTest {
 
     //helper
     private void addVehicle(String vehicleId, Direction from, Direction to, int arrivalStep) {
-        intersection.getRoad(from).addVehicleToLane(to, new Vehicle(vehicleId, arrivalStep));
+        addVehicle(vehicleId, from, to, arrivalStep, VehicleType.CAR);
+    }
+
+    private void addVehicle(String vehicleId, Direction from, Direction to, int arrivalStep, VehicleType type) {
+        intersection.getRoad(from).addVehicleToLane(to, new Vehicle(vehicleId, arrivalStep,type));
     }
 }
