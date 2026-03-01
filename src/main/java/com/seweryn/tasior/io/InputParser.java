@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.seweryn.tasior.commands.*;
 import com.seweryn.tasior.controller.TimeSlot;
+import com.seweryn.tasior.controller.TrafficDefaults;
 import com.seweryn.tasior.model.Direction;
 import com.seweryn.tasior.model.Turn;
 import com.seweryn.tasior.model.VehicleType;
@@ -33,7 +34,7 @@ public class InputParser {
                             node.get("vehicleId").asText(),
                             node.has("vehicleType")
                                     ? VehicleType.valueOf(node.get("vehicleType").asText().toUpperCase())
-                                    : VehicleType.CAR   // domyślnie CAR
+                                    : VehicleType.CAR
                     );
                     case "step"-> Command.STEP;
                     case "configureAlgorithm" -> parseConfigureAlgorithm(node);
@@ -54,21 +55,25 @@ public class InputParser {
     }
 
     private static ConfigureAlgorithmCommand parseConfigureAlgorithm(JsonNode node) {
-        double carPriority = node.get("carPriority").asDouble(1.0);
-        double busPriority = node.get("busPriority").asDouble(5.0);
-
-        AlgorithmMode mode = node.has("mode")
-                ? AlgorithmMode.valueOf(node.get("mode").asText().toUpperCase())
-                : AlgorithmMode.REACTIVE;
-
-        Map<Direction, List<TimeSlot>> historicalData = null;
-        if (mode == AlgorithmMode.HISTORICAL && node.has("historicalData")) {
-            historicalData = parseHistoricalData(node.get("historicalData"));
-        }
-
-        return new ConfigureAlgorithmCommand(carPriority, busPriority, mode, historicalData);
+        return new ConfigureAlgorithmCommand(
+                getDouble(node, "carPriority"),
+                getDouble(node, "busPriority"),
+                node.has("mode")
+                        ? AlgorithmMode.valueOf(node.get("mode").asText().toUpperCase())
+                        : null,
+                node.has("historicalData") ? parseHistoricalData(node.get("historicalData")) : null,
+                getInt(node, "maxWaitTime"),
+                getInt(node, "yellowTime")
+        );
     }
 
+    private static Double getDouble(JsonNode node, String field) {
+        return node.has(field) ? node.get(field).asDouble() : null;
+    }
+
+    private static Integer getInt(JsonNode node, String field) {
+        return node.has(field) ? node.get(field).asInt() : null;
+    }
     private static Map<Direction, List<TimeSlot>> parseHistoricalData(JsonNode historicalNode) {
         Map<Direction, List<TimeSlot>> historicalData = new HashMap<>();
 

@@ -40,24 +40,6 @@ public class Lane {
         return crossingVehicle != null;
     }
 
-    public double getAverageWaitTime(int currentStep) {
-        return waitingVehicles.stream()
-                .mapToInt(v -> currentStep - v.arrivalTime())
-                .average()
-                .orElse(0.0);
-    }
-
-    public int getPercentileWaitTime(int currentStep, double percentile) {
-        List<Integer> waitTimes = waitingVehicles.stream()
-                .map(v -> currentStep - v.arrivalTime())
-                .sorted()
-                .toList();
-
-        if (waitTimes.isEmpty()) return 0;
-        int rank = (int) Math.ceil(percentile / 100.0 * waitTimes.size()) - 1;
-        return waitTimes.get(rank);
-    }
-
     public TrafficLight getTrafficLight(){
         return trafficLight;
     }
@@ -74,8 +56,8 @@ public class Lane {
         this.blocked = blocked;
     }
 
-    public boolean isBlocked() {
-        return blocked;
+    public void setYellowTime(int yellowTime) {
+        trafficLight.setYellowTime(yellowTime);
     }
 
     public boolean isPassable(){

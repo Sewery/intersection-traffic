@@ -9,13 +9,26 @@ import java.util.Set;
 
 public class TrafficController{
     private final Intersection intersection;
-    private final WeightCalculator weightCalculator;
+    private WeightCalculator weightCalculator;
     private Set<Movement> currentPhase;
     private Set<Movement> nextPhase;
+    private int yellowTime = TrafficDefaults.YELLOW_TIME;
 
     public TrafficController(Intersection intersection, WeightCalculator weightCalculator) {
         this.intersection = intersection;
         this.weightCalculator = weightCalculator;
+    }
+
+    public void setWeightCalculator(WeightCalculator weightCalculator) {
+        this.weightCalculator = weightCalculator;
+    }
+
+    public void configureTimings(int maxWaitTime, int yellowTime) {
+        this.yellowTime = yellowTime;
+        weightCalculator.configureTimings(maxWaitTime);
+        intersection.getRoads().forEach(road ->
+                road.getLanes().forEach(lane -> lane.setYellowTime(yellowTime))
+        );
     }
 
     public void executeStep(int stepCounter) {
@@ -43,7 +56,7 @@ public class TrafficController{
                 .max(Comparator.comparingDouble(
                         phase -> weightCalculator.calculatePhaseWeight(phase, intersection, stepCounter)
                 ))
-                .orElseGet(() -> findBestPhase(stepCounter));  // fallback
+                .orElseGet(() -> findBestPhase(stepCounter));
     }
 
     private Set<Movement> findBestPhase(int stepCounter) {
@@ -61,7 +74,7 @@ public class TrafficController{
         double currentWeight = weightCalculator.calculatePhaseWeight(currentPhase, intersection, stepCounter);
         double bestWeight = weightCalculator.calculatePhaseWeight(bestPhase, intersection, stepCounter);
 
-        double switchingPenalty = currentWeight * TrafficLight.YELLOW_TIME;
+        double switchingPenalty = currentWeight * yellowTime;
         return (bestWeight - currentWeight) > switchingPenalty;
     }
 

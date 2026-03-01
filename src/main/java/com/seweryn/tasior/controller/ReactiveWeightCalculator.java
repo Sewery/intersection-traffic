@@ -9,18 +9,19 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 public class ReactiveWeightCalculator implements WeightCalculator{
-    private double busPriority;
-    private double carPriority;
-
-    public ReactiveWeightCalculator() {
-        this.carPriority = 1.0;
-        this.busPriority = 5.0;
-    }
+    private double carPriority = TrafficDefaults.CAR_PRIORITY;
+    private double busPriority = TrafficDefaults.BUS_PRIORITY;
+    private int maxWaitTime = TrafficDefaults.MAX_WAIT_TIME;
 
     @Override
     public void configure(double carPriority, double busPriority) {
         this.carPriority = carPriority;
         this.busPriority = busPriority;
+    }
+
+    @Override
+    public void configureTimings(int maxWaitTime) {
+        this.maxWaitTime = maxWaitTime;
     }
 
     @Override
@@ -39,7 +40,7 @@ public class ReactiveWeightCalculator implements WeightCalculator{
 
         return lane.getWaitingVehicles().stream()
                 .mapToDouble(v -> {
-                    double waitBonus = v.waitTime(currentStep) >= MAX_WAIT_TIME
+                    double waitBonus = v.waitTime(currentStep) >= maxWaitTime
                             ? 1_000_000.0
                             : 1.0 + Math.pow(v.waitTime(currentStep), 1.5);
                     return waitBonus * getPriority(v);
@@ -59,7 +60,7 @@ public class ReactiveWeightCalculator implements WeightCalculator{
         return intersection.getRoads().stream()
                 .flatMap(road -> road.getLanes().stream())
                 .flatMap(lane -> lane.getWaitingVehicles().stream())
-                .anyMatch(v -> v.waitTime(currentStep) >= MAX_WAIT_TIME);
+                .anyMatch(v -> v.waitTime(currentStep) >= maxWaitTime);
     }
 
     @Override
@@ -67,7 +68,7 @@ public class ReactiveWeightCalculator implements WeightCalculator{
         return intersection.getRoads().stream()
                 .flatMap(road -> road.getLanes().stream())
                 .filter(lane -> lane.getWaitingVehicles().stream()
-                        .anyMatch(v -> v.waitTime(currentStep) >= MAX_WAIT_TIME))
+                        .anyMatch(v -> v.waitTime(currentStep) >= maxWaitTime))
                 .map(lane -> new Movement(
                         intersection.getRoadByLane(lane).getLocation(),
                         lane.getAllowedTurn()))

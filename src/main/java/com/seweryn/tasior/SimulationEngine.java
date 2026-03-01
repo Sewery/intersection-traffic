@@ -1,28 +1,20 @@
 package com.seweryn.tasior;
 
-import com.seweryn.tasior.commands.AddVehicleCommand;
-import com.seweryn.tasior.commands.Command;
-import com.seweryn.tasior.commands.ConfigureAlgorithmCommand;
-import com.seweryn.tasior.commands.UpdateLaneStatusCommand;
+import com.seweryn.tasior.commands.*;
 
-import com.seweryn.tasior.controller.HistoricalWeightCalculator;
-import com.seweryn.tasior.controller.TrafficController;
-import com.seweryn.tasior.controller.ReactiveWeightCalculator;
+import com.seweryn.tasior.controller.*;
 
-import com.seweryn.tasior.controller.WeightCalculator;
 import com.seweryn.tasior.io.SimulationResult;
 import com.seweryn.tasior.io.StepStatus;
 import com.seweryn.tasior.io.InputParser;
 
-import com.seweryn.tasior.model.Intersection;
-import com.seweryn.tasior.model.Lane;
-import com.seweryn.tasior.model.Road;
-import com.seweryn.tasior.model.Vehicle;
+import com.seweryn.tasior.model.*;
 import com.seweryn.tasior.statistics.SimulationEvent;
 import com.seweryn.tasior.statistics.StatisticsCollector;
 
 import java.util.List;
 import java.util.ArrayList;
+import java.util.Map;
 
 public class SimulationEngine {
     private final List<Command> commands;
@@ -31,6 +23,14 @@ public class SimulationEngine {
     private final SimulationResult result;
     private final StatisticsCollector statisticsCollector = new StatisticsCollector();
     private int stepCounter;
+
+    private AlgorithmMode currentMode = AlgorithmMode.REACTIVE;
+    private double currentCarPriority = TrafficDefaults.CAR_PRIORITY;
+    private double currentBusPriority = TrafficDefaults.BUS_PRIORITY;
+    private int currentMaxWaitTime = TrafficDefaults.MAX_WAIT_TIME;
+    private int currentYellowTime  = TrafficDefaults.YELLOW_TIME;
+    private Map<Direction, List<TimeSlot>> currentHistoricalData = Map.of();
+
 
     public SimulationEngine(String inputFile) {
         this.commands = InputParser.parse(inputFile);
@@ -68,7 +68,7 @@ public class SimulationEngine {
                 if (!lane.getWaitingVehicles().isEmpty()) {
                     statisticsCollector.onEvent(new SimulationEvent.LaneBlocked(
                             command.road(), command.turn(),
-                            lane.getWaitingVehicles().size(), stepCounter));  // ← step
+                            lane.getWaitingVehicles().size(), stepCounter));
                 }
             } else {
                 statisticsCollector.onEvent(new SimulationEvent.LaneUnblocked(
@@ -79,12 +79,20 @@ public class SimulationEngine {
     }
 
     private void handleConfigure(ConfigureAlgorithmCommand command) {
-        WeightCalculator calculator = switch (command.mode()) {
-            case HISTORICAL -> new HistoricalWeightCalculator(command.historicalData());
+        if (command.mode() != null) currentMode = command.mode();
+        if (command.carPriority() != null) currentCarPriority = command.carPriority();
+        if (command.busPriority() != null) currentBusPriority = command.busPriority();
+        if (command.maxWaitTime() != null) currentMaxWaitTime = command.maxWaitTime();
+        if (command.yellowTime() != null) currentYellowTime = command.yellowTime();
+        if (command.historicalData() != null) currentHistoricalData = command.historicalData();
+
+        WeightCalculator calculator = switch (currentMode) {
             case REACTIVE   -> new ReactiveWeightCalculator();
+            case HISTORICAL -> new HistoricalWeightCalculator(currentHistoricalData);
         };
-        calculator.configure(command.carPriority(), command.busPriority());
-        controller = new TrafficController(intersection, calculator);
+        calculator.configure(currentCarPriority, currentBusPriority);
+        controller.setWeightCalculator(calculator);
+        controller.configureTimings(currentMaxWaitTime, currentYellowTime);
     }
 
     private void handleStep() {

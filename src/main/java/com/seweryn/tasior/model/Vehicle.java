@@ -21,10 +21,6 @@ public class Vehicle {
         return vehicleId;
     }
 
-    public int arrivalTime(){
-        return arrivalStep;
-    }
-
     public VehicleState getState(){
         return state;
     }

@@ -24,6 +24,11 @@ public class HistoricalWeightCalculator implements WeightCalculator {
     }
 
     @Override
+    public void configureTimings(int maxWaitTime) {
+        reactive.configureTimings(maxWaitTime);
+    }
+
+    @Override
     public double calculatePhaseWeight(Set<Movement> phase, Intersection intersection, int currentStep) {
         return phase.stream()
                 .mapToDouble(m -> {

@@ -10,21 +10,30 @@ public class TrafficLight {
 
     private State state;
     private int yellowStepsRemaining;
-    public static final int YELLOW_TIME = 3;
+    private int yellowTime;
 
     public TrafficLight(State initialState) {
+        this(initialState, com.seweryn.tasior.controller.TrafficDefaults.YELLOW_TIME);
+    }
+
+    public TrafficLight(State initialState, int yellowTime) {
         this.state = initialState;
+        this.yellowTime = yellowTime;
         this.yellowStepsRemaining = 0;
+    }
+
+    public void setYellowTime(int yellowTime) {
+        this.yellowTime = yellowTime;
     }
 
     public void startTransitionToRed() {
         this.state = State.YELLOW_TO_RED;
-        this.yellowStepsRemaining = YELLOW_TIME;
+        this.yellowStepsRemaining = yellowTime;
     }
 
     public void startTransitionToGreen() {
         this.state = State.YELLOW_TO_GREEN;
-        this.yellowStepsRemaining = YELLOW_TIME;
+        this.yellowStepsRemaining = yellowTime;
     }
 
     public void tick() {

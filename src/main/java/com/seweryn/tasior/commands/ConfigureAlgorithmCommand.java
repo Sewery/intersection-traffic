@@ -7,11 +7,13 @@ import java.util.List;
 import java.util.Map;
 
 public record ConfigureAlgorithmCommand(
-        double carPriority,
-        double busPriority,
+        Double carPriority,
+        Double busPriority,
         AlgorithmMode mode,
-        Map<Direction, List<TimeSlot>> historicalData
-) implements Command {
+        Map<Direction, List<TimeSlot>> historicalData,
+        Integer maxWaitTime,
+        Integer yellowTime
+        ) implements Command {
     @Override
     public CommandType getType() {
         return CommandType.CONFIGURE_ALGORITHM;
