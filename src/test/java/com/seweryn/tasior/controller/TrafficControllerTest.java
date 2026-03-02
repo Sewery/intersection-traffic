@@ -1,7 +1,5 @@
 package com.seweryn.tasior.controller;
 
-import com.seweryn.tasior.controller.TrafficController;
-import com.seweryn.tasior.controller.ReactiveWeightCalculator;
 import com.seweryn.tasior.model.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

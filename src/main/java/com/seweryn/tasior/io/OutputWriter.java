@@ -10,6 +10,8 @@ import java.io.File;
 public class OutputWriter {
     private static final ObjectMapper mapper = new ObjectMapper();
 
+    private OutputWriter() {}
+
     public static void write(SimulationResult result, String outputFilePath) {
         try {
             ObjectNode root = mapper.createObjectNode();
@@ -29,7 +31,7 @@ public class OutputWriter {
                     .writeValue(new File(outputFilePath), root);
 
         } catch (Exception e) {
-            throw new RuntimeException("Failed to write output: " + outputFilePath, e);
+            throw new SimulationIOException("Failed to write output: " + outputFilePath, e);
         }
     }
 

@@ -2,7 +2,6 @@ package com.seweryn.tasior.controller;
 
 import com.seweryn.tasior.model.Intersection;
 import com.seweryn.tasior.model.Movement;
-import com.seweryn.tasior.model.TrafficLight;
 
 import java.util.Comparator;
 import java.util.Set;

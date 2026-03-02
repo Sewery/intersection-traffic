@@ -11,6 +11,9 @@ import java.util.*;
  * without causing conflicts between vehicles.
  */
 public class TrafficCompatibility {
+
+    private TrafficCompatibility() {}
+
     private static final List<Set<Movement>> groups = List.of(
             // Phase 1: North-South straight and right turn
             Set.of(

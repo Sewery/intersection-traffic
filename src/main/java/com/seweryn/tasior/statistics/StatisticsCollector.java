@@ -86,7 +86,7 @@ public class StatisticsCollector {
     }
 
     private Map<Direction, Statistics.RoadStat> computePerRoadStats() {
-        Map<Direction, List<String>> byDirection = new HashMap<>();
+        Map<Direction, List<String>> byDirection = new EnumMap<>(Direction.class);
         arrivalSteps.keySet().forEach(id ->
                 byDirection.computeIfAbsent(vehicleDirections.get(id), _ -> new ArrayList<>()).add(id));
 

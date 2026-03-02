@@ -10,14 +10,13 @@ import com.seweryn.tasior.model.Turn;
 import com.seweryn.tasior.model.VehicleType;
 
 import java.io.File;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class InputParser {
 
     private static final ObjectMapper mapper = new ObjectMapper();
+
+    private InputParser() {}
 
     public static List<Command> parse(String inputFilePath) {
         try {
@@ -49,8 +48,10 @@ public class InputParser {
                 result.add(command);
             }
             return result;
+        } catch (IllegalArgumentException e) {
+            throw e;
         } catch (Exception e) {
-            throw new RuntimeException("Failed to parse input: " + inputFilePath, e);
+            throw new SimulationIOException("Failed to parse input: " + inputFilePath, e);
         }
     }
 
@@ -75,7 +76,7 @@ public class InputParser {
         return node.has(field) ? node.get(field).asInt() : null;
     }
     private static Map<Direction, List<TimeSlot>> parseHistoricalData(JsonNode historicalNode) {
-        Map<Direction, List<TimeSlot>> historicalData = new HashMap<>();
+        Map<Direction, List<TimeSlot>> historicalData = new EnumMap<>(Direction.class);
 
         historicalNode.fields().forEachRemaining(entry -> {
             Direction direction = Direction.fromString(entry.getKey());

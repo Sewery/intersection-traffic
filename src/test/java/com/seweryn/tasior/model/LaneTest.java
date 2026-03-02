@@ -79,7 +79,7 @@ class LaneTest {
     void getWaitingVehiclesShouldBeUnmodifiable() {
         lane.addVehicle(new Vehicle("car1", 0));
         assertThrows(UnsupportedOperationException.class,
-                () -> lane.getWaitingVehicles().clear());
+                lane.getWaitingVehicles()::clear);
     }
 
     // startCrossing / finishCrossing

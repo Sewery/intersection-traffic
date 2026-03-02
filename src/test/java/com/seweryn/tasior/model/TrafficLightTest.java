@@ -1,7 +1,6 @@
 package com.seweryn.tasior.model;
 
 import com.seweryn.tasior.controller.TrafficDefaults;
-import com.seweryn.tasior.model.TrafficLight;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
